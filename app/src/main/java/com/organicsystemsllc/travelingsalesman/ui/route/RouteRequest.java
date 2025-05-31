@@ -1,15 +1,12 @@
 package com.organicsystemsllc.travelingsalesman.ui.route;
 
 
-import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.maps.model.LatLng;
 import com.organicsystemsllc.travelingsalesman.BuildConfig;
@@ -22,10 +19,8 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class RouteRequest extends JsonObjectRequest {
 

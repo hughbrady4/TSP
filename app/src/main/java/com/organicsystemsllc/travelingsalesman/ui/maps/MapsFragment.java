@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.PinConfig;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
         GoogleMap.OnCameraMoveStartedListener,
@@ -121,6 +123,29 @@ public class MapsFragment extends Fragment implements
 
     }
 
+    private Polyline addEdgeToMap(@NonNull ArrayList<MapNode> nodes, @NonNull GoogleMap map) {
+        PolylineOptions options = new PolylineOptions()
+                .clickable(true);
+        nodes.forEach(new Consumer<MapNode>() {
+            @Override
+            public void accept(MapNode node) {
+                options.add(node.getPosition());
+            }
+        });
+        return map.addPolyline(options);
+    }
+
+//    private Polyline addEdgeToMap(String encodedPolyline, GoogleMap map) {
+//        List<LatLng> path = PolyUtil.decode(encodedPolyline);
+//        PolylineOptions options = new PolylineOptions().clickable(true);
+//        path.forEach(new Consumer<LatLng>() {
+//            @Override
+//            public void accept(LatLng latLng) {
+//                options.add(latLng);
+//            }
+//        });
+//        return map.addPolyline(options);
+//    }
 
     @Nullable
     @Override

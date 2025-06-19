@@ -87,65 +87,9 @@ public class MapsFragment extends Fragment implements
     private FragmentMapsBinding mBinding;
 
 
-    private void addMarkerToMap(LatLng position, @NonNull GoogleMap map) {
-        int index = mMapNodes.size();
-        String label = String.valueOf(LABELS[index % LABELS.length]);
-        // Set the glyph text.
-
-        PinConfig pinConfig = PinConfig.builder()
-                .setBackgroundColor(Color.RED)
-                .setBorderColor(Color.GREEN)
-                .setGlyph(new PinConfig.Glyph(label))
-                .build();
-
-        AdvancedMarkerOptions options = new AdvancedMarkerOptions()
-                .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
-                .title(label)
-                .position(position);
-
-        AdvancedMarker marker = (AdvancedMarker) map.addMarker(options);
-        
-        assert marker != null;
-        marker.setDraggable(true);
 
 
-        MapNode node = new MapNode(position, label, false);
-//        mMapNodes.add(node);
-//        mMapsViewModel.getMapNodes().setValue(mMapNodes);
-        marker.setTag(node);
-//        reverseGeoCode(marker, node);
-        //add to firebase
-//        FirebaseUser user = mAuth.getCurrentUser();
-//        if (user != null) {
-//            mDatabase.child("user_nodes").child(user.getUid()).setValue(mMapNodes);
-//        }
-//        addToDatabase(node);
 
-    }
-
-    private Polyline addEdgeToMap(@NonNull ArrayList<MapNode> nodes, @NonNull GoogleMap map) {
-        PolylineOptions options = new PolylineOptions()
-                .clickable(true);
-        nodes.forEach(new Consumer<MapNode>() {
-            @Override
-            public void accept(MapNode node) {
-                options.add(node.getPosition());
-            }
-        });
-        return map.addPolyline(options);
-    }
-
-//    private Polyline addEdgeToMap(String encodedPolyline, GoogleMap map) {
-//        List<LatLng> path = PolyUtil.decode(encodedPolyline);
-//        PolylineOptions options = new PolylineOptions().clickable(true);
-//        path.forEach(new Consumer<LatLng>() {
-//            @Override
-//            public void accept(LatLng latLng) {
-//                options.add(latLng);
-//            }
-//        });
-//        return map.addPolyline(options);
-//    }
 
     @Nullable
     @Override

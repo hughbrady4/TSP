@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_maps">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.login.UserFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_user" >
+
+
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_maps"
+            app:destination="@id/navigation_maps" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_maps"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.maps.MapsFragment"
+        android:label="Map"
+        tools:layout="@layout/fragment_maps"/>
+
+    <fragment
+        android:id="@+id/navigation_routes"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.route.RouteFragment"
+        android:label="Routes"
+        tools:layout="@layout/fragment_route_list"/>
+
+    <fragment
+        android:id="@+id/navigation_notifications"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.notifications.NotificationsFragment"
+        android:label="@string/title_notifications"
+        tools:layout="@layout/fragment_notifications" />
+</navigation>

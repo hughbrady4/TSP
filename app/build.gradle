@@ -1,0 +1,129 @@
+plugins {
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.googleAndroidLibrariesMapsplatformSecretsGradlePlugin)
+    id 'com.google.gms.google-services'
+
+
+}
+
+
+secrets {
+    // Optionally specify a different file name containing your secrets.
+    // The plugin defaults to "local.properties"
+    propertiesFileName = "secrets.properties"
+
+    // A properties file containing default secret values. This file can be
+    // checked in version control.
+    defaultPropertiesFileName = "local.properties"
+
+    // Configure which keys should be ignored by the plugin by providing regular expressions.
+    // "sdk.dir" is ignored by default.
+//    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
+//    ignoreList.add("sdk.*")       // Ignore all keys matching the regexp "sdk.*"
+}
+
+android {
+    namespace 'com.organicsystemsllc.travelingsalesman'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.organicsystemsllc.travelingsalesman"
+        minSdk 29
+        targetSdk 34
+        versionCode 2
+        versionName "1.0.1"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildFeatures {
+        buildConfig true
+        viewBinding true
+    }
+    sourceSets {
+        main {
+            java {
+                srcDirs 'src/main/java',
+                        'src/main/java/com.organicsystemsllc.travelingsalesman/ui'
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.constraintlayout
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+    implementation libs.lifecycle.livedata.ktx
+    implementation libs.lifecycle.viewmodel.ktx
+    implementation libs.play.services.maps
+    implementation libs.legacy.support.v4
+    implementation libs.recyclerview
+    implementation libs.annotation
+    implementation libs.fragment
+    implementation libs.play.services.location
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+
+    implementation libs.play.services.maps.v1900
+    implementation libs.android.maps.utils
+
+
+    // Stripe Android SDK
+//    implementation(libs.stripe.android)
+
+
+    // Java language implementation
+    def nav_version = "2.7.7"
+
+    implementation "androidx.navigation:navigation-fragment:$nav_version"
+    implementation "androidx.navigation:navigation-ui:$nav_version"
+
+    implementation platform('com.google.firebase:firebase-bom:33.13.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
+
+    implementation 'com.firebaseui:firebase-ui-auth:8.0.2'
+
+    implementation("com.google.firebase:firebase-firestore")
+
+    implementation("com.android.volley:volley:1.2.1")
+
+    def room_version = "2.6.1"
+
+    implementation "androidx.room:room-rxjava2:$room_version"
+
+    implementation "androidx.room:room-rxjava3:$room_version"
+
+//    implementation "androidx.car.app:app:1.4.0"
+
+    // For Android Auto specific functionality
+//    implementation "androidx.car.app:app-projected:1.4.0"
+
+//    implementation "androidx.car.app:app:$car_app_library_version"
+//    implementation project(":common:data")
+
+
+
+
+
+
+
+
+
+
+}

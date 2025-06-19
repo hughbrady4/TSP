@@ -1,0 +1,136 @@
+package com.organicsystemsllc.travelingsalesman.ui.route;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.organicsystemsllc.travelingsalesman.MainActivity;
+import com.organicsystemsllc.travelingsalesman.R;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+/**
+ * A fragment representing a list of Items.
+ */
+public class RouteFragment extends Fragment {
+
+
+
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
+    public RouteFragment() {
+    }
+
+    public static RouteFragment newInstance() {
+        RouteFragment fragment = new RouteFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
+        CollectionReference mUserCollection = mFireStore.collection("users");
+
+        if (user != null) {
+            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+
+            mUserCollection.document(user.getUid()).collection("nodes")
+                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d(MainActivity.TAG, document.getId() + " => " + document.getData());
+//                                LatLng pos = (LatLng) document.get("position");
+                                Boolean visited = (Boolean) document.getBoolean("visited");
+                                String address = (String) document.getString("formatted_address");
+                                RecyclerView listView = (RecyclerView) getView();
+
+                            }
+                        } else {
+                            Log.d(MainActivity.TAG, "Error getting documents: ", task.getException());
+                        }
+
+
+                    }
+                });
+
+        }
+
+
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_route_list, container, false);
+
+        // Set the adapter
+        if (view instanceof RecyclerView) {
+            Context context = view.getContext();
+            RecyclerView recyclerView = (RecyclerView) view;
+//          recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            recyclerView.setLayoutManager(new GridLayoutManager(context, 1));
+        }
+
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
+//    @Override
+//    public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+//        String routeId = snapshot.getKey();
+//        Route route = snapshot.getValue(Route.class);
+//        mRoutes.add(route);
+//        RecyclerView listView = (RecyclerView) getView();
+//        if (listView != null && listView.getAdapter() != null)
+//            listView.getAdapter().notifyItemChanged(mRoutes.size()-1);
+//
+//    }
+
+}

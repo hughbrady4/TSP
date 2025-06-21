@@ -36,6 +36,7 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -182,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
 
         mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
-//        mMapsViewModel = new ViewModelProvider(this).get(MapsViewModel.class);
+        mMapsViewModel = new ViewModelProvider(this).get(MapsViewModel.class);
         mUserViewModel.getTrackToggle().observeForever(new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean track) {
@@ -290,6 +291,14 @@ public class MainActivity extends AppCompatActivity {
 //                        mMapsViewModel.getTrackToggle().setValue(tracking);
                         String dateString = DateFormat.getDateTimeInstance().format(updated.toDate());
                         mUserViewModel.getText().setValue(dateString);
+
+                        float lat = data.getLatitude();
+                        float lng = data.getLongitude();
+                        Log.d(TAG, "latLng: " + lat + ", " + lng);
+                        LatLng latLng = new LatLng(lat,lng);
+                        Log.i(TAG, latLng.toString());
+                        mMapsViewModel.getLatLng().setValue(latLng);
+
                     }
                 } else {
                     Log.d(TAG, source + " data: null");

@@ -4,18 +4,18 @@ import com.google.firebase.Timestamp;
 
 public class UserData {
 
-    private long altitude;
-    private long bearing;
+    private float altitude;
+    private float bearing;
     private boolean isOnline;
-    private long latitude;
-    private long longitude;
+    private float latitude;
+    private float longitude;
     private boolean trackLocation;
     private Timestamp updated;
 
     public UserData() {
     }
 
-    public long getAltitude() {
+    public float getAltitude() {
         return altitude;
     }
 
@@ -23,7 +23,7 @@ public class UserData {
         this.altitude = altitude;
     }
 
-    public long getBearing() {
+    public float getBearing() {
         return bearing;
     }
 
@@ -39,21 +39,15 @@ public class UserData {
         isOnline = online;
     }
 
-    public long getLatitude() {
+    public float getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(long latitude) {
-        this.latitude = latitude;
-    }
 
-    public long getLongitude() {
+    public float getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(long longitude) {
-        this.longitude = longitude;
-    }
 
     public boolean isTrackLocation() {
         return trackLocation;

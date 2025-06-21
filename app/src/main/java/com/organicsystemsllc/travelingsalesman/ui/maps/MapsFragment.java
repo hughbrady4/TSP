@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -49,6 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
@@ -72,6 +74,16 @@ public class MapsFragment extends Fragment implements
 //            mMap.setOnCameraMoveListener(this);
 //            mMap.setOnCameraMoveCanceledListener(this);
 
+
+            mMapsViewModel.getLatLng().observe(requireActivity(), new Observer<LatLng>() {
+                @Override
+                public void onChanged(LatLng latLng) {
+                    Log.i(TAG,"Position updated!");
+                    addMarkerToMap(latLng, map);
+                }
+            });
+
+
             setLocationEnabled();
             map.setOnMyLocationClickListener(MapsFragment.this);
 
@@ -79,6 +91,8 @@ public class MapsFragment extends Fragment implements
     };
     private MapsViewModel mMapsViewModel;
     private final LinkedList<MapNode> mMapNodes = new LinkedList<>();
+
+    private final LinkedList<AdvancedMarker> mMarkers = new LinkedList<>();
     private final ArrayList<Polyline> mMapEdges = new ArrayList<>();
     private static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private FragmentMapsBinding mMapsBinding;
@@ -88,7 +102,7 @@ public class MapsFragment extends Fragment implements
 
 
     private void addMarkerToMap(LatLng position, @NonNull GoogleMap map) {
-        int index = mMapNodes.size();
+        int index = mMarkers.size();
         String label = String.valueOf(LABELS[index % LABELS.length]);
         // Set the glyph text.
 
@@ -107,18 +121,12 @@ public class MapsFragment extends Fragment implements
         
         assert marker != null;
         marker.setDraggable(true);
-
-
+        mMarkers.add(marker);
         MapNode node = new MapNode(position, label, false);
-//        mMapNodes.add(node);
-//        mMapsViewModel.getMapNodes().setValue(mMapNodes);
+        mMapNodes.add(node);
+        mMapsViewModel.getUserLocation().setValue(node);
         marker.setTag(node);
 //        reverseGeoCode(marker, node);
-        //add to firebase
-//        FirebaseUser user = mAuth.getCurrentUser();
-//        if (user != null) {
-//            mDatabase.child("user_nodes").child(user.getUid()).setValue(mMapNodes);
-//        }
 //        addToDatabase(node);
 
     }

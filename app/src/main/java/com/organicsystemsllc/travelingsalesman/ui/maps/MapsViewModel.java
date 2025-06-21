@@ -3,6 +3,7 @@ package com.organicsystemsllc.travelingsalesman.ui.maps;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 
 import java.util.LinkedList;
@@ -12,10 +13,10 @@ public class MapsViewModel extends ViewModel {
 
     private final MutableLiveData<Boolean> mAddMarkers;
     private final MutableLiveData<Route> mRoute;
-
     private final MutableLiveData<Boolean> mTrackToggle;
-
     private final MutableLiveData<Boolean> mOnlineToggle;
+    private final MutableLiveData<LatLng> mLatLng;
+    private final MutableLiveData<MapNode> mUserLocation;
 
 
     public MapsViewModel() {
@@ -23,6 +24,8 @@ public class MapsViewModel extends ViewModel {
         mRoute = new MutableLiveData<>();
         mTrackToggle = new MutableLiveData<>();
         mOnlineToggle = new MutableLiveData<>();
+        mLatLng = new MutableLiveData<>();
+        mUserLocation = new MutableLiveData<>();
     }
 
     public MutableLiveData<Boolean> getAddMarkers() {
@@ -39,5 +42,13 @@ public class MapsViewModel extends ViewModel {
 
     public MutableLiveData<Boolean> getOnlineToggle() {
         return mOnlineToggle;
+    }
+
+    public MutableLiveData<LatLng> getLatLng() {
+        return mLatLng;
+    }
+
+    public MutableLiveData<MapNode> getUserLocation() {
+        return mUserLocation;
     }
 }

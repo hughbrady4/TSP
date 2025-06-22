@@ -2,6 +2,7 @@ package com.organicsystemsllc.travelingsalesman.ui.maps;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.maps.model.AdvancedMarker;
 import com.google.android.gms.maps.model.LatLng;
 
 public class MapNode {
@@ -10,24 +11,28 @@ public class MapNode {
     private String mLabel;
     private boolean mVisited;
     private String mFormattedAddress;
+    private AdvancedMarker mMarker;
 
-    public MapNode(LatLng position, String label, boolean visited) {
+    public MapNode(LatLng position, String label, boolean visited, AdvancedMarker marker) {
         this.mPosition = position;
         this.mLabel = label;
         this.mVisited = visited;
+        this.mMarker = marker;
     }
 
-    public MapNode(LatLng position, String label, boolean visited, String formattedAddress) {
+    public MapNode(LatLng position, String label, boolean visited, String formattedAddress, AdvancedMarker marker) {
         this.mPosition = position;
         this.mLabel = label;
         this.mVisited = visited;
         this.mFormattedAddress = formattedAddress;
+        this.mMarker = marker;
     }
 
-    public MapNode(String id, boolean visited, String address) {
+    public MapNode(String id, boolean visited, String address, AdvancedMarker marker) {
         this.mLabel = id;
         this.mVisited = visited;
         this.mFormattedAddress = address;
+        this.mMarker = marker;
     }
 
     public LatLng getPosition() {

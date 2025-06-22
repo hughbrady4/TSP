@@ -50,7 +50,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
@@ -122,7 +121,7 @@ public class MapsFragment extends Fragment implements
         assert marker != null;
         marker.setDraggable(true);
         mMarkers.add(marker);
-        MapNode node = new MapNode(position, label, false);
+        MapNode node = new MapNode(position, label, false, marker);
         mMapNodes.add(node);
         mMapsViewModel.getUserLocation().setValue(node);
         marker.setTag(node);

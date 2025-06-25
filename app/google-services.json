@@ -1,1 +1,47 @@
-
+{
+  "project_info": {
+    "project_number": "939475367267",
+    "project_id": "osweb-140a8",
+    "storage_bucket": "osweb-140a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:939475367267:android:e21190e272bcec715f4f56",
+        "android_client_info": {
+          "package_name": "com.organicsystemsllc.travelingsalesman"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "939475367267-6hss8csqqis2rbp66i95bhsic1tcjftj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.organicsystemsllc.travelingsalesman",
+            "certificate_hash": "6836e4b7eaba561002cd6cd8bbc4bbcd16503a23"
+          }
+        },
+        {
+          "client_id": "939475367267-vmt8c7drgvplr6hd6ds1a8obk8omsl7p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSGa40lZj0pYFw2l3D0h0ncizz5fSfq34"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "939475367267-vmt8c7drgvplr6hd6ds1a8obk8omsl7p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -122,7 +122,7 @@ public class MapsFragment extends Fragment implements
         assert marker != null;
         marker.setDraggable(true);
         mMarkers.add(marker);
-        MapNode node = new MapNode(position, label, false);
+        MapNode node = new MapNode(position, label, false, marker);
         mMapNodes.add(node);
         mMapsViewModel.getUserLocation().setValue(node);
         marker.setTag(node);

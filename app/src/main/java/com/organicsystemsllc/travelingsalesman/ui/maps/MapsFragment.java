@@ -99,35 +99,32 @@ public class MapsFragment extends Fragment implements
     private final FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
     private FragmentMapsBinding mBinding;
+    private AdvancedMarker mUserLocMarker;
 
 
     private void addMarkerToMap(LatLng position, @NonNull GoogleMap map) {
-        int index = mMarkers.size();
-        String label = String.valueOf(LABELS[index % LABELS.length]);
-        // Set the glyph text.
 
-        PinConfig pinConfig = PinConfig.builder()
-                .setBackgroundColor(Color.RED)
-                .setBorderColor(Color.GREEN)
-                .setGlyph(new PinConfig.Glyph(label))
-                .build();
+        if (mUserLocMarker == null) {
 
-        AdvancedMarkerOptions options = new AdvancedMarkerOptions()
-                .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
-                .title(label)
-                .position(position);
+            String label = "A";
 
-        AdvancedMarker marker = (AdvancedMarker) map.addMarker(options);
-        
-        assert marker != null;
-        marker.setDraggable(true);
-        mMarkers.add(marker);
-        MapNode node = new MapNode(position, label, false, marker);
-        mMapNodes.add(node);
-        mMapsViewModel.getUserLocation().setValue(node);
-        marker.setTag(node);
-//        reverseGeoCode(marker, node);
-//        addToDatabase(node);
+            PinConfig pinConfig = PinConfig.builder()
+                    .setBackgroundColor(Color.RED)
+                    .setBorderColor(Color.GREEN)
+                    .setGlyph(new PinConfig.Glyph(label))
+                    .build();
+
+            AdvancedMarkerOptions options = new AdvancedMarkerOptions()
+                    .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
+                    .title(label)
+                    .position(position);
+
+            mUserLocMarker = (AdvancedMarker) map.addMarker(options);
+
+
+        } else {
+            mUserLocMarker.setPosition(position);
+        }
 
     }
 

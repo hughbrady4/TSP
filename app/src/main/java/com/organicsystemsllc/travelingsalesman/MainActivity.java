@@ -19,15 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-//import androidx.navigation.NavController;
-//import androidx.navigation.Navigation;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.room.Room;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
@@ -37,34 +33,25 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.annotations.Nullable;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.organicsystemsllc.travelingsalesman.databinding.ActivityMainBinding;
-import com.organicsystemsllc.travelingsalesman.ui.login.UserViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.login.UserData;
+import com.organicsystemsllc.travelingsalesman.ui.login.UserViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
     private UserViewModel mUserViewModel;
     public static final String TAG = "TRAVELING_SALESMAN";
-//    public final AppDatabase mDb = Room.databaseBuilder(getApplicationContext(),
-//            AppDatabase.class, "traveling-salesman-db").build();
     private final ActivityResultLauncher<Intent> mSignInLauncher = registerForActivityResult(
             new FirebaseAuthUIActivityResultContract(),
             this::onSignInResult
@@ -73,9 +60,6 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
     private PendingIntent mPendingIntent;
     private MapsViewModel mMapsViewModel;
-    //    private Fused mFusedLocationClient;
-
-//    private LocationCallback mLocationCallback;
 
     private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
@@ -161,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         ActivityMainBinding mBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(mBinding.getRoot());
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
         // Initialize Firebase Auth
@@ -184,15 +168,12 @@ public class MainActivity extends AppCompatActivity {
         mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         mMapsViewModel = new ViewModelProvider(this).get(MapsViewModel.class);
-        mUserViewModel.getTrackToggle().observeForever(new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean track) {
-                Log.i(TAG, "Track indicator updated: " + track.toString());
-                if (Boolean.TRUE.equals(track)) {
-                    startLocationUpdates();
-                } else {
-                    stopLocationUpdates();
-                }
+        mUserViewModel.getTrackToggle().observeForever(track -> {
+            Log.i(TAG, "Track indicator updated: " + track.toString());
+            if (Boolean.TRUE.equals(track)) {
+                startLocationUpdates();
+            } else {
+                stopLocationUpdates();
             }
         });
 
@@ -237,72 +218,61 @@ public class MainActivity extends AppCompatActivity {
         DocumentReference docRef = FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid());
 
 
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-                        UserData data = document.toObject(UserData.class);
+        docRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document.exists()) {
+                    UserData data = document.toObject(UserData.class);
 
-                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                        if (data != null) {
-                            Boolean online = data.isOnline();
-                            Boolean tracking = data.isOnline();
+                    Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                    if (data != null) {
+                        Boolean online = data.isOnline();
+                        Boolean tracking = data.isOnline();
 //                            Timestamp updated = data.getUpdated();
 
-                            mUserViewModel.getOnlineToggle().setValue(online);
-                            mUserViewModel.getTrackToggle().setValue(tracking);
+                        mUserViewModel.getOnlineToggle().setValue(online);
+                        mUserViewModel.getTrackToggle().setValue(tracking);
 //                            mUserViewModel.getText().setValue(updated.toString());
-                        }
-
-
-
-                    } else {
-                        Log.d(TAG, "No such document");
                     }
+
+
+
                 } else {
-                    Log.d(TAG, "get failed with ", task.getException());
+                    Log.d(TAG, "No such document");
                 }
+            } else {
+                Log.d(TAG, "get failed with ", task.getException());
             }
         });
 
 
-        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot snapshot,
-                                @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    Log.w(TAG, "Listen failed.", e);
-                    return;
+        docRef.addSnapshotListener((snapshot, e) -> {
+            if (e != null) {
+                Log.w(TAG, "Listen failed.", e);
+                return;
+            }
+
+            String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
+                    ? "Local" : "Server";
+
+            if (snapshot != null && snapshot.exists() && source.equalsIgnoreCase("server")) {
+                Log.d(TAG, source + " data: " + snapshot.getData());
+                UserData data = snapshot.toObject(UserData.class);
+                if (data != null) {
+                    Timestamp updated = data.getUpdated();
+                    String dateString = DateFormat.getDateTimeInstance().format(updated.toDate());
+                    mUserViewModel.getText().setValue(dateString);
+
+                    float lat = data.getLatitude();
+                    float lng = data.getLongitude();
+                    Log.d(TAG, "latLng: " + lat + ", " + lng);
+                    LatLng latLng = new LatLng(lat,lng);
+                    Log.i(TAG, latLng.toString());
+                    mMapsViewModel.getLatLng().setValue(latLng);
+
                 }
-
-                String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
-                        ? "Local" : "Server";
-
-                if (snapshot != null && snapshot.exists() && source.equalsIgnoreCase("server")) {
-                    Log.d(TAG, source + " data: " + snapshot.getData());
-                    UserData data = snapshot.toObject(UserData.class);
-                    if (data != null) {
-//                        Boolean online = data.isOnline();
-//                        Boolean tracking = data.isOnline();
-                        Timestamp updated = data.getUpdated();
-//                        mMapsViewModel.getOnlineToggle().setValue(online);
-//                        mMapsViewModel.getTrackToggle().setValue(tracking);
-                        String dateString = DateFormat.getDateTimeInstance().format(updated.toDate());
-                        mUserViewModel.getText().setValue(dateString);
-
-                        float lat = data.getLatitude();
-                        float lng = data.getLongitude();
-                        Log.d(TAG, "latLng: " + lat + ", " + lng);
-                        LatLng latLng = new LatLng(lat,lng);
-                        Log.i(TAG, latLng.toString());
-                        mMapsViewModel.getLatLng().setValue(latLng);
-
-                    }
-                } else {
-                    Log.d(TAG, source + " data: null");
-                }
+            } else {
+                Log.d(TAG, source + " data: null");
             }
         });
 
@@ -319,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
 
         int version = Build.VERSION.SDK_INT;
         int versionBG = Build.VERSION_CODES.Q;
-        Log.i(TAG, Integer.toString(version) + ", " + versionBG);
+        Log.i(TAG, version + ", " + versionBG);
         int backgroundPermission = ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         if (backgroundPermission != PackageManager.PERMISSION_GRANTED) {
@@ -340,9 +310,6 @@ public class MainActivity extends AppCompatActivity {
                 .setDurationMillis(Long.MAX_VALUE)
                 .setMinUpdateDistanceMeters(1)
                 .build();
-//        mFusedLocationClient.requestLocationUpdates(locationRequest,
-//                mLocationCallback,
-//                Looper.getMainLooper());
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 

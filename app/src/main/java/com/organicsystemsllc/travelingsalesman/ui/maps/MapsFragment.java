@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -32,10 +31,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.PinConfig;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -46,12 +41,8 @@ import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
         GoogleMap.OnCameraMoveStartedListener,
@@ -69,34 +60,19 @@ public class MapsFragment extends Fragment implements
             MapCapabilities capabilities = map.getMapCapabilities();
             Log.i(TAG, "Advanced marker enabled? " + capabilities.isAdvancedMarkersAvailable());
 
-//            mMap.setOnCameraIdleListener();
-//            mMap.setOnCameraMoveStartedListener(this);
-//            mMap.setOnCameraMoveListener(this);
-//            mMap.setOnCameraMoveCanceledListener(this);
 
-
-            mMapsViewModel.getLatLng().observe(requireActivity(), new Observer<LatLng>() {
-                @Override
-                public void onChanged(LatLng latLng) {
-                    Log.i(TAG,"Position updated!");
-                    addMarkerToMap(latLng, map);
-                }
+            mMapsViewModel.getLatLng().observe(requireActivity(), latLng -> {
+                Log.i(TAG,"Position updated!");
+                addMarkerToMap(latLng, map);
             });
 
 
             setLocationEnabled();
-            map.setOnMyLocationClickListener(MapsFragment.this);
 
         }
     };
     private MapsViewModel mMapsViewModel;
-    private final LinkedList<MapNode> mMapNodes = new LinkedList<>();
 
-    private final LinkedList<AdvancedMarker> mMarkers = new LinkedList<>();
-    private final ArrayList<Polyline> mMapEdges = new ArrayList<>();
-    private static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    private FragmentMapsBinding mMapsBinding;
-    private final FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
     private FragmentMapsBinding mBinding;
     private AdvancedMarker mUserLocMarker;
@@ -128,30 +104,6 @@ public class MapsFragment extends Fragment implements
 
     }
 
-    private Polyline addEdgeToMap(@NonNull ArrayList<MapNode> nodes, @NonNull GoogleMap map) {
-        PolylineOptions options = new PolylineOptions()
-                .clickable(true);
-        nodes.forEach(new Consumer<MapNode>() {
-            @Override
-            public void accept(MapNode node) {
-                options.add(node.getPosition());
-            }
-        });
-        return map.addPolyline(options);
-    }
-
-//    private Polyline addEdgeToMap(String encodedPolyline, GoogleMap map) {
-//        List<LatLng> path = PolyUtil.decode(encodedPolyline);
-//        PolylineOptions options = new PolylineOptions().clickable(true);
-//        path.forEach(new Consumer<LatLng>() {
-//            @Override
-//            public void accept(LatLng latLng) {
-//                options.add(latLng);
-//            }
-//        });
-//        return map.addPolyline(options);
-//    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -172,13 +124,8 @@ public class MapsFragment extends Fragment implements
 
 //        FloatingActionButton fab;
         Button addBtn = mBinding.addNode;
-        addBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        addBtn.setOnClickListener(view1 -> Snackbar.make(view1, "Here's a Snack bar", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show());
     }
 
     @Override
@@ -198,21 +145,15 @@ public class MapsFragment extends Fragment implements
 
         FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
             .set(userMap, SetOptions.merge())
-            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    Snackbar.make(requireView(), "Location updated on server.", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                    Log.d(MainActivity.TAG, "DocumentSnapshot successfully written!");
-                }
+            .addOnSuccessListener(aVoid -> {
+                Snackbar.make(requireView(), "Location updated on server.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                Log.d(MainActivity.TAG, "DocumentSnapshot successfully written!");
             })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Snackbar.make(requireView(), "Failed to update server.", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                    Log.w(MainActivity.TAG, "Error writing document", e);
-                }
+            .addOnFailureListener(e -> {
+                Snackbar.make(requireView(), "Failed to update server.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                Log.w(MainActivity.TAG, "Error writing document", e);
             });
 
     }
@@ -250,7 +191,9 @@ public class MapsFragment extends Fragment implements
         int courseGranted = ActivityCompat
                 .checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION);
 
-        Log.i(TAG, "Location: " + fineGranted + ", " + PackageManager.PERMISSION_GRANTED);
+        Log.i(TAG, "Location: " + fineGranted + ", " + courseGranted);
+        //if both fine and course permission are not allow, then make call to request
+        //else enable location on google map
         if (fineGranted != PackageManager.PERMISSION_GRANTED &&
                 courseGranted != PackageManager.PERMISSION_GRANTED) {
 
@@ -258,14 +201,14 @@ public class MapsFragment extends Fragment implements
             mLocationPermissionRequest.launch(new String[] {
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                    android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
 
             });
-            return;
-        }
-        if (mMap != null) {
+        } else if (mMap != null) {
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
+            mMap.setOnMyLocationClickListener(MapsFragment.this);
+
         }
     }
 

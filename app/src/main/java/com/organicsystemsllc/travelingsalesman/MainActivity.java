@@ -61,83 +61,6 @@ public class MainActivity extends AppCompatActivity {
     private PendingIntent mPendingIntent;
     private MapsViewModel mMapsViewModel;
 
-    private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
-        IdpResponse response = result.getIdpResponse();
-        if (result.getResultCode() == RESULT_OK) {
-            // Successfully signed in
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            assert user != null;
-            mUserViewModel.getUser().setValue(user);
-            Toast.makeText(this, "User sign in.", Toast.LENGTH_SHORT).show();
-
-        } else {
-            //some error logging
-            mUserViewModel.getUser().setValue(null);
-            if (response != null && response.getError() != null
-                    && response.getError().getLocalizedMessage() != null) {
-                Log.e(TAG, response.getError().getLocalizedMessage());
-                Toast.makeText(this, response.getError().getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-
-            }
-        }
-    }
-
-    private void signIn() {
-        // Choose authentication providers
-        List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.EmailBuilder().build(),
-                new AuthUI.IdpConfig.PhoneBuilder().build(),
-                new AuthUI.IdpConfig.GoogleBuilder().build());
-//                new AuthUI.IdpConfig.FacebookBuilder().build());
-//                new AuthUI.IdpConfig.TwitterBuilder().build());
-
-        // Create and launch sign-in intent
-        Intent signInIntent = AuthUI.getInstance()
-                .createSignInIntentBuilder()
-                .setAvailableProviders(providers)
-                .setLogo(R.mipmap.ic_launcher)
-                .setTheme(R.style.Theme_TravelingSalesman)
-                .build();
-        mSignInLauncher.launch(signInIntent);
-    }
-
-    private void signOut() {
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(task -> mUserViewModel.getUser().setValue(null));
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
-
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.options, menu);
-        return true;
-
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        } else if (id == R.id.action_sign_in) {
-            signIn();
-            return true;
-        } else if (id == R.id.action_sign_out) {
-            signOut();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -330,6 +253,74 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopLocationUpdates() {
         mFusedLocationClient.removeLocationUpdates(mPendingIntent);
+    }
+
+    private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
+        IdpResponse response = result.getIdpResponse();
+        if (result.getResultCode() == RESULT_OK) {
+            // Successfully signed in
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            assert user != null;
+            mUserViewModel.getUser().setValue(user);
+            Toast.makeText(this, "User sign in.", Toast.LENGTH_SHORT).show();
+
+        } else {
+            //some error logging
+            mUserViewModel.getUser().setValue(null);
+            if (response != null && response.getError() != null
+                    && response.getError().getLocalizedMessage() != null) {
+                Log.e(TAG, response.getError().getLocalizedMessage());
+                Toast.makeText(this, response.getError().getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        }
+    }
+
+    private void signIn() {
+        // Choose authentication providers
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.EmailBuilder().build(),
+                new AuthUI.IdpConfig.PhoneBuilder().build(),
+                new AuthUI.IdpConfig.GoogleBuilder().build());
+//                new AuthUI.IdpConfig.FacebookBuilder().build());
+//                new AuthUI.IdpConfig.TwitterBuilder().build());
+
+        // Create and launch sign-in intent
+        Intent signInIntent = AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(providers)
+                .setLogo(R.mipmap.ic_launcher)
+                .setTheme(R.style.Theme_TravelingSalesman)
+                .build();
+        mSignInLauncher.launch(signInIntent);
+    }
+
+    private void signOut() {
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener(task -> mUserViewModel.getUser().setValue(null));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            return true;
+        } else if (id == R.id.action_sign_in) {
+            signIn();
+            return true;
+        } else if (id == R.id.action_sign_out) {
+            signOut();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 

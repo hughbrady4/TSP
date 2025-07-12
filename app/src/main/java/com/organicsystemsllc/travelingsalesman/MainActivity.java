@@ -32,7 +32,9 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,11 +46,12 @@ import com.organicsystemsllc.travelingsalesman.databinding.ActivityMainBinding;
 import com.organicsystemsllc.travelingsalesman.ui.login.UserData;
 import com.organicsystemsllc.travelingsalesman.ui.login.UserViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
+import com.google.android.gms.maps.OnMapReadyCallback;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private UserViewModel mUserViewModel;
     public static final String TAG = "TRAVELING_SALESMAN";
@@ -324,5 +327,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
+    @Override
+    public void onMapReady(@NonNull GoogleMap map) {
+        MapCapabilities capabilities = map.getMapCapabilities();
+        Log.i(TAG, "Advanced marker enabled? " + capabilities.isAdvancedMarkersAvailable());
+    }
 }

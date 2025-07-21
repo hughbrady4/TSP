@@ -20,19 +20,17 @@ public class MapNode {
         this.mMarker = marker;
     }
 
-    public MapNode(LatLng position, String label, boolean visited, String formattedAddress, AdvancedMarker marker) {
+    public MapNode(LatLng position, String label, boolean visited, String formattedAddress) {
         this.mPosition = position;
         this.mLabel = label;
         this.mVisited = visited;
         this.mFormattedAddress = formattedAddress;
-        this.mMarker = marker;
     }
 
-    public MapNode(String id, boolean visited, String address, AdvancedMarker marker) {
+    public MapNode(String id, boolean visited, String address) {
         this.mLabel = id;
         this.mVisited = visited;
         this.mFormattedAddress = address;
-        this.mMarker = marker;
     }
 
     public LatLng getPosition() {
@@ -75,5 +73,9 @@ public class MapNode {
 
     public void setFormattedAddress(String formattedAddress) {
         this.mFormattedAddress = formattedAddress;
+    }
+
+    public AdvancedMarker getMarker() {
+        return mMarker;
     }
 }

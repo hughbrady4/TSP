@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -31,9 +32,12 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.PinConfig;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -41,6 +45,7 @@ import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +57,8 @@ public class MapsFragment extends Fragment implements
         GoogleMap.OnMyLocationClickListener {
 
     private GoogleMap mMap;
+    private static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+
     private final OnMapReadyCallback mCallback = new OnMapReadyCallback() {
 
         @Override
@@ -61,46 +68,86 @@ public class MapsFragment extends Fragment implements
             Log.i(TAG, "Advanced marker enabled? " + capabilities.isAdvancedMarkersAvailable());
 
 
-            mMapsViewModel.getLatLng().observe(requireActivity(), latLng -> {
-                Log.i(TAG,"Position updated!");
-                addMarkerToMap(latLng, map);
-            });
+//            mMapsViewModel.getLatLng().observe(requireActivity(), latLng -> {
+//                Log.i(TAG,"Position updated!");
+//                addMarkerToMap(latLng, map);
+//            });
+
+
+
+
+
 
 
             setLocationEnabled();
 
+            setListeners();
+
+            getNodes();
         }
     };
+
+    private void setListeners() {
+
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(@NonNull LatLng latLng) {
+                addMarkerToMap(latLng);
+            }
+        });
+    }
+
+
+    private void getNodes() {
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(),"Please login to get data.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+    }
+
     private MapsViewModel mMapsViewModel;
 
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
     private FragmentMapsBinding mBinding;
-    private AdvancedMarker mUserLocMarker;
 
 
-    private void addMarkerToMap(LatLng position, @NonNull GoogleMap map) {
+    private void addMarkerToMap(LatLng position) {
 
-        if (mUserLocMarker == null) {
 
-            String label = "A";
-
-            PinConfig pinConfig = PinConfig.builder()
-                    .setBackgroundColor(Color.RED)
-                    .setBorderColor(Color.GREEN)
-                    .setGlyph(new PinConfig.Glyph(label))
-                    .build();
-
-            AdvancedMarkerOptions options = new AdvancedMarkerOptions()
-                    .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
-                    .title(label)
-                    .position(position);
-
-            mUserLocMarker = (AdvancedMarker) map.addMarker(options);
-
+        final MutableLiveData<ArrayList<MapNode>> nodes = mMapsViewModel.getNodes();
+        ArrayList<MapNode> newList;
+        if (nodes.getValue() != null) {
+            newList = new ArrayList<MapNode>(nodes.getValue());
 
         } else {
-            mUserLocMarker.setPosition(position);
+            newList = new ArrayList<MapNode>();
+
         }
+        int index = newList.size();
+        String label = String.valueOf(LABELS[index % LABELS.length]);
+
+        PinConfig pinConfig = PinConfig.builder()
+                .setBackgroundColor(Color.RED)
+                .setBorderColor(Color.GREEN)
+                .setGlyph(new PinConfig.Glyph(label))
+                .build();
+
+        AdvancedMarkerOptions options = new AdvancedMarkerOptions()
+                .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
+                .title(label)
+                .position(position);
+
+        AdvancedMarker marker = (AdvancedMarker) mMap.addMarker(options);
+
+        MapNode newNode = new MapNode(position, label, false, marker);
+
+        newList.add(newNode);
+
+        nodes.setValue(newList);
 
     }
 
@@ -124,8 +171,35 @@ public class MapsFragment extends Fragment implements
 
 //        FloatingActionButton fab;
         Button addBtn = mBinding.addNode;
-        addBtn.setOnClickListener(view1 -> Snackbar.make(view1, "Here's a Snack bar", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
+        addBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (currentUser == null) {
+                    Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                LatLng latLng = mMap.getCameraPosition().target;
+                FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+                        .collection("nodes")
+                        .add(latLng)
+                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                            @Override
+                            public void onSuccess(DocumentReference documentReference) {
+                                Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w(TAG, "Error adding document", e);
+                            }
+                        });
+
+
+            }
+        });
+
     }
 
     @Override

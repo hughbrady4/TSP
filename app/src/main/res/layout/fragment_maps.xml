@@ -30,10 +30,10 @@
     </androidx.fragment.app.FragmentContainerView>
 
     <Button
-        android:id="@+id/addNode"
+        android:id="@+id/getRoute"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/add_node"
+        android:text="@string/get_route"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

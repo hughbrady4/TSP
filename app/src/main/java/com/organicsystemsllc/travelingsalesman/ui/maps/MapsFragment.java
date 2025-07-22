@@ -23,6 +23,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -44,9 +48,14 @@ import com.google.firebase.firestore.SetOptions;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
+import com.organicsystemsllc.travelingsalesman.ui.route.Route;
+import com.organicsystemsllc.travelingsalesman.ui.route.RouteRequest;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 public class MapsFragment extends Fragment implements
@@ -170,31 +179,43 @@ public class MapsFragment extends Fragment implements
         }
 
 //        FloatingActionButton fab;
-        Button addBtn = mBinding.addNode;
-        addBtn.setOnClickListener(new View.OnClickListener() {
+        Button getRoute = mBinding.getRoute;
+        getRoute.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                if (currentUser == null) {
-                    Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
-                    return;
+
+                final MutableLiveData<ArrayList<MapNode>> nodes = mMapsViewModel.getNodes();
+                if (nodes.getValue() != null) {
+
+
+
+                    String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
+                    RouteRequest routeRequest = new
+                        RouteRequest(url, new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                Route route = new Route(response);
+                                mMapsViewModel.getRoute().setValue(route);
+                                addRouteToFirestore(route);
+                            }
+                        }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e(TAG, "Failed! " + error.getLocalizedMessage());
+                        }
+                    });
+
+
+
+                routeRequest.setOrigin(nodes.getValue().get(0).getPosition());
+                routeRequest.setDestination(nodes.getValue().get(nodes.getValue().size()-1).getPosition());
+//                LinkedList<MapNode> copyNodes = (LinkedList<MapNode>) nodes.getValue().clone();
+//                routeRequest.setMapNodes(copyNodes);
+                // Add the request to the RequestQueue.
+                RequestQueue queue = Volley.newRequestQueue(requireActivity());
+                queue.add(routeRequest);
+
                 }
-                LatLng latLng = mMap.getCameraPosition().target;
-                FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
-                        .collection("nodes")
-                        .add(latLng)
-                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                            @Override
-                            public void onSuccess(DocumentReference documentReference) {
-                                Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w(TAG, "Error adding document", e);
-                            }
-                        });
 
 
             }
@@ -284,6 +305,55 @@ public class MapsFragment extends Fragment implements
             mMap.setOnMyLocationClickListener(MapsFragment.this);
 
         }
+    }
+
+    public void addRouteToFirestore(Route route) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+                .collection("nodes")
+                .add(route)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document", e);
+                    }
+                });
+
+    }
+
+    public void addNodeToFirestore() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LatLng latLng = mMap.getCameraPosition().target;
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+                .collection("nodes")
+                .add(latLng)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document", e);
+                    }
+                });
+
     }
 
     @Override

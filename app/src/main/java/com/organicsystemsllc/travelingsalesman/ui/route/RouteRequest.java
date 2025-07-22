@@ -52,7 +52,7 @@ public class RouteRequest extends JsonObjectRequest {
     public Map<String, String> getHeaders() throws AuthFailureError {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json; charset=utf-8");
-        headers.put("X-Goog-Api-Key", BuildConfig.DISTANCE_MATRIX_KEY);
+        headers.put("X-Goog-Api-Key", BuildConfig.TSP_API_KEY);
         headers.put("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline");
 //        headers.put("User-Agent", "Mozilla/5.0");
         return headers;
@@ -64,8 +64,8 @@ public class RouteRequest extends JsonObjectRequest {
 
         try {
             JSONObject origCordJSON = new JSONObject();
-
-
+            origCordJSON.put("latitude", mOrigin.latitude);
+            origCordJSON.put("longitude", mOrigin.longitude);
 
             JSONObject locationJSON = new JSONObject();
             locationJSON.put("latLng", origCordJSON);
@@ -75,6 +75,8 @@ public class RouteRequest extends JsonObjectRequest {
             body.put("origin", origin);
 
             JSONObject destCordJSON = new JSONObject();
+            destCordJSON.put("latitude", mDestination.latitude);
+            destCordJSON.put("longitude", mDestination.longitude);
 
 
             JSONObject location2 = new JSONObject();
@@ -87,9 +89,12 @@ public class RouteRequest extends JsonObjectRequest {
             JSONArray intermediates = new JSONArray();
 
 
-            body.put("intermediates", intermediates);
+//            body.put("intermediates", intermediates);
 
             body.put("travelMode", "DRIVE");
+            body.put("routingPreference", "TRAFFIC_AWARE");
+            body.put("languageCode", languageCode);
+            body.put("units", units);
 
         } catch (JSONException e) {
             Log.e(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));

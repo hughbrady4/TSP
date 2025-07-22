@@ -42,4 +42,5 @@
     <string name="share">Share</string>
     <string name="web_link">Web Link</string>
     <string name="add_node">Add Node</string>
+    <string name="get_route">Route</string>
 </resources>

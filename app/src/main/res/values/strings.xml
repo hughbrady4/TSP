@@ -43,4 +43,7 @@
     <string name="web_link">Web Link</string>
     <string name="add_node">Add Node</string>
     <string name="get_route">Route</string>
+    <string name="clear">Clear</string>
+    <string name="dialog_save_route">Save Route?</string>
+    <string name="cancel">Cancel</string>
 </resources>

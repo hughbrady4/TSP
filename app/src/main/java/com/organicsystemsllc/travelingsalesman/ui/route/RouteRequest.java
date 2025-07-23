@@ -11,6 +11,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.maps.model.LatLng;
 import com.organicsystemsllc.travelingsalesman.BuildConfig;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
+import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,14 +19,16 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class RouteRequest extends JsonObjectRequest {
 
-    private LatLng mOrigin;
-    private LatLng mDestination;
+    private ArrayList<MapNode> mNodes;
     private String travelMode = "DRIVE";
     private String routingPreference = "TRAFFIC_AWARE";
     private Timestamp departureTime;
@@ -40,6 +43,10 @@ public class RouteRequest extends JsonObjectRequest {
 
     public RouteRequest(int method, String url, @Nullable JSONObject jsonRequest, Response.Listener<JSONObject> listener, @Nullable Response.ErrorListener errorListener) {
         super(Method.POST, url, null, listener, errorListener);
+    }
+
+    public void setNodes(ArrayList<MapNode> nodes) {
+        this.mNodes = nodes;
     }
 
     private class routeModifiers {
@@ -63,36 +70,63 @@ public class RouteRequest extends JsonObjectRequest {
         JSONObject body = new JSONObject();
 
         try {
+
+            int size = mNodes.size();
+            MapNode origin = mNodes.get(0);
+
+            int index = size - 2;
+            MapNode destination = mNodes.get(size-1);
+
+
             JSONObject origCordJSON = new JSONObject();
-            origCordJSON.put("latitude", mOrigin.latitude);
-            origCordJSON.put("longitude", mOrigin.longitude);
+            origCordJSON.put("latitude", origin.getPosition().latitude);
+            origCordJSON.put("longitude", origin.getPosition().longitude);
 
             JSONObject locationJSON = new JSONObject();
             locationJSON.put("latLng", origCordJSON);
 
-            JSONObject origin = new JSONObject();
-            origin.put("location", locationJSON);
-            body.put("origin", origin);
+            JSONObject originJSON = new JSONObject();
+            originJSON.put("location", locationJSON);
+            body.put("origin", originJSON);
 
             JSONObject destCordJSON = new JSONObject();
-            destCordJSON.put("latitude", mDestination.latitude);
-            destCordJSON.put("longitude", mDestination.longitude);
+            destCordJSON.put("latitude", destination.getPosition().latitude);
+            destCordJSON.put("longitude", destination.getPosition().longitude);
 
 
             JSONObject location2 = new JSONObject();
             location2.put("latLng", destCordJSON);
 
-            JSONObject destination = new JSONObject();
-            destination.put("location", location2);
-            body.put("destination", destination);
+            JSONObject destJSON = new JSONObject();
+            destJSON.put("location", location2);
+            body.put("destination", destJSON);
 
-            JSONArray intermediates = new JSONArray();
+            if (size > 2) {
+                List<MapNode> interNodes = mNodes.subList(0, size - 1);
+                JSONArray intermediates = new JSONArray();
+                interNodes.forEach(new Consumer<MapNode>() {
+                    @Override
+                    public void accept(MapNode mapNode) {
+                        JSONObject interCordJSON = new JSONObject();
+                        try {
+                            interCordJSON.put("latitude", mapNode.getPosition().latitude);
+                            interCordJSON.put("longitude", mapNode.getPosition().longitude);
+                            JSONObject location3 = new JSONObject();
+                            location3.put("latLng", interCordJSON);
+                            JSONObject interJSON = new JSONObject();
+                            interJSON.put("location", location3);
+                            intermediates.put(interJSON);
+                        } catch (JSONException e) {
+                            Log.e(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
+                        }
+                    }
+                });
+                body.put("intermediates", intermediates);
 
+            }
 
-//            body.put("intermediates", intermediates);
-
-            body.put("travelMode", "DRIVE");
-            body.put("routingPreference", "TRAFFIC_AWARE");
+            body.put("travelMode", travelMode);
+            body.put("routingPreference", routingPreference);
             body.put("languageCode", languageCode);
             body.put("units", units);
 
@@ -104,21 +138,7 @@ public class RouteRequest extends JsonObjectRequest {
         return body.toString().getBytes(StandardCharsets.UTF_8);
     }
 
-    public LatLng getOrigin() {
-        return mOrigin;
-    }
 
-    public void setOrigin(LatLng origin) {
-        this.mOrigin = origin;
-    }
-
-    public LatLng getDestination() {
-        return mDestination;
-    }
-
-    public void setDestination(LatLng destination) {
-        this.mDestination = destination;
-    }
 
 
 

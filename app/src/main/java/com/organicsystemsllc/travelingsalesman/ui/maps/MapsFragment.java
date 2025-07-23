@@ -3,6 +3,8 @@ package com.organicsystemsllc.travelingsalesman.ui.maps;
 import static com.organicsystemsllc.travelingsalesman.MainActivity.TAG;
 
 import android.Manifest;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -18,9 +20,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.volley.RequestQueue;
@@ -36,6 +41,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.PinConfig;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
@@ -45,6 +52,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.maps.android.PolyUtil;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
@@ -55,8 +63,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
         GoogleMap.OnCameraMoveStartedListener,
@@ -93,6 +102,32 @@ public class MapsFragment extends Fragment implements
             setListeners();
 
             getNodes();
+
+            mMapsViewModel.getRoute().observe(getViewLifecycleOwner(),
+                route -> {
+                    if (route != null && route.getPolyline() != null) {
+                        Polyline line = addEdgeToMap(route.getPolyline(), map);
+                    }
+            });
+
+            Button clear = mBinding.clear;
+            clear.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    map.clear();
+                    mMapsViewModel.getNodes().setValue(null);
+                    mMapsViewModel.getRoute().setValue(null);
+                }
+            });
+
+            Button save = mBinding.save;
+            save.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SaveRouteDialogFragment dialog = new SaveRouteDialogFragment();
+                    dialog.show(requireActivity().getSupportFragmentManager(), "SAVE_DIALOG");
+                }
+            });
         }
     };
 
@@ -140,8 +175,8 @@ public class MapsFragment extends Fragment implements
         String label = String.valueOf(LABELS[index % LABELS.length]);
 
         PinConfig pinConfig = PinConfig.builder()
-                .setBackgroundColor(Color.RED)
-                .setBorderColor(Color.GREEN)
+                .setBackgroundColor(Color.GRAY)
+                .setBorderColor(Color.BLACK)
                 .setGlyph(new PinConfig.Glyph(label))
                 .build();
 
@@ -158,6 +193,21 @@ public class MapsFragment extends Fragment implements
 
         nodes.setValue(newList);
 
+
+
+
+    }
+
+    private Polyline addEdgeToMap(String encodedPolyline, GoogleMap map) {
+        List<LatLng> path = PolyUtil.decode(encodedPolyline);
+        PolylineOptions options = new PolylineOptions().clickable(true);
+        path.forEach(new Consumer<LatLng>() {
+            @Override
+            public void accept(LatLng latLng) {
+                options.add(latLng);
+            }
+        });
+        return map.addPolyline(options);
     }
 
     @Nullable
@@ -196,7 +246,7 @@ public class MapsFragment extends Fragment implements
                             public void onResponse(JSONObject response) {
                                 Route route = new Route(response);
                                 mMapsViewModel.getRoute().setValue(route);
-                                addRouteToFirestore(route);
+//                                addRouteToFirestore(route);
                             }
                         }, new Response.ErrorListener() {
                         @Override
@@ -207,8 +257,8 @@ public class MapsFragment extends Fragment implements
 
 
 
-                routeRequest.setOrigin(nodes.getValue().get(0).getPosition());
-                routeRequest.setDestination(nodes.getValue().get(nodes.getValue().size()-1).getPosition());
+                routeRequest.setNodes(nodes.getValue());
+                Log.i(TAG, String.valueOf(nodes.getValue()));
 //                LinkedList<MapNode> copyNodes = (LinkedList<MapNode>) nodes.getValue().clone();
 //                routeRequest.setMapNodes(copyNodes);
                 // Add the request to the RequestQueue.
@@ -221,6 +271,26 @@ public class MapsFragment extends Fragment implements
             }
         });
 
+
+        mMapsViewModel.getRoute().observeForever(new Observer<Route>() {
+            @Override
+            public void onChanged(Route route) {
+                if (route != null) {
+                    mBinding.getRoute.setEnabled(false);
+                    mBinding.getRoute.setVisibility(View.INVISIBLE);
+                    mBinding.save.setEnabled(true);
+                    mBinding.save.setVisibility(View.VISIBLE);
+
+                } else {
+                    mBinding.getRoute.setEnabled(true);
+                    mBinding.getRoute.setVisibility(View.VISIBLE);
+                    mBinding.save.setEnabled(false);
+                    mBinding.save.setVisibility(View.INVISIBLE);
+
+                }
+
+            }
+        });
     }
 
     @Override
@@ -313,8 +383,9 @@ public class MapsFragment extends Fragment implements
             Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
             return;
         }
-        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
-                .collection("nodes")
+        FirebaseFirestore.getInstance().collection("users")
+                .document(currentUser.getUid())
+                .collection("routes")
                 .add(route)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
@@ -375,4 +446,27 @@ public class MapsFragment extends Fragment implements
     public void onCameraMoveStarted(int i) {
 
     }
+
+    public static class SaveRouteDialogFragment extends DialogFragment {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction.
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+            builder.setMessage(R.string.dialog_save_route)
+                    .setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // START THE GAME!
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancels the dialog.
+                        }
+                    });
+            // Create the AlertDialog object and return it.
+            return builder.create();
+        }
+    }
+
 }

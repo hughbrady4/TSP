@@ -55,6 +55,7 @@ import com.organicsystemsllc.travelingsalesman.ui.login.UserViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -212,10 +213,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
 
-        CollectionReference nodeRef = FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
-                .collection("nodes");
+        CollectionReference routeRef = FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+                .collection("routes");
 
-        nodeRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+        routeRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value,
                                 @Nullable FirebaseFirestoreException e) {
@@ -235,7 +236,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (DocumentChange dc : value.getDocumentChanges()) {
                     switch (dc.getType()) {
                         case ADDED:
-                            Log.d(TAG, "New city: " + dc.getDocument().getData());
+                            Log.d(TAG, "New route: " + dc.getDocument().getData());
+                            Route route = dc.getDocument().toObject(Route.class);
+//                            mMapsViewModel.getRoute().setValue(route);
                             break;
                         case MODIFIED:
                             Log.d(TAG, "Modified city: " + dc.getDocument().getData());

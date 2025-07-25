@@ -69,7 +69,7 @@ public class RouteFragment extends Fragment {
         if (user != null) {
             DatabaseReference database = FirebaseDatabase.getInstance().getReference();
 
-            mUserCollection.document(user.getUid()).collection("nodes")
+            mUserCollection.document(user.getUid()).collection("routes")
                 .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {

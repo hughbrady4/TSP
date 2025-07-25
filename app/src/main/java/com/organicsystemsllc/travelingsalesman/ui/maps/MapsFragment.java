@@ -3,6 +3,7 @@ package com.organicsystemsllc.travelingsalesman.ui.maps;
 import static com.organicsystemsllc.travelingsalesman.MainActivity.TAG;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -32,14 +33,18 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.AdvancedMarker;
 import com.google.android.gms.maps.model.AdvancedMarkerOptions;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PinConfig;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -53,6 +58,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.maps.android.PolyUtil;
+import com.organicsystemsllc.travelingsalesman.ItemListDialogFragment;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
@@ -79,23 +85,35 @@ public class MapsFragment extends Fragment implements
 
     private final OnMapReadyCallback mCallback = new OnMapReadyCallback() {
 
+        @SuppressLint("PotentialBehaviorOverride")
         @Override
         public void onMapReady(GoogleMap map) {
             mMap = map;
             MapCapabilities capabilities = map.getMapCapabilities();
             Log.i(TAG, "Advanced marker enabled? " + capabilities.isAdvancedMarkersAvailable());
 
+            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @SuppressLint("PotentialBehaviorOverride")
+                @Override
+                public boolean onMarkerClick(@NonNull Marker marker) {
+                    ItemListDialogFragment.newInstance(30).show(requireActivity()
+                            .getSupportFragmentManager(), "dialog");
+                    return false;
+                }
+            });
 
-//            mMapsViewModel.getLatLng().observe(requireActivity(), latLng -> {
-//                Log.i(TAG,"Position updated!");
+            mMapsViewModel.getLatLng().observe(requireActivity(), latLng -> {
+                Log.i(TAG,"Position updated!");
 //                addMarkerToMap(latLng, map);
-//            });
+                CameraUpdate update = CameraUpdateFactory.newLatLng(latLng);
+                map.moveCamera(update);
+            });
 
-
-
-
-
-
+//            final LatLng value = mMapsViewModel.getLatLng().getValue();
+//            if (value != null) {
+//                CameraUpdate update = CameraUpdateFactory.newLatLng(value);
+//                map.moveCamera(update);
+//            }
 
             setLocationEnabled();
 
@@ -114,6 +132,7 @@ public class MapsFragment extends Fragment implements
             clear.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
                     map.clear();
                     mMapsViewModel.getNodes().setValue(null);
                     mMapsViewModel.getRoute().setValue(null);
@@ -183,9 +202,11 @@ public class MapsFragment extends Fragment implements
         AdvancedMarkerOptions options = new AdvancedMarkerOptions()
                 .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
                 .title(label)
-                .position(position);
+                .position(position)
+                .draggable(true);
 
         AdvancedMarker marker = (AdvancedMarker) mMap.addMarker(options);
+
 
         MapNode newNode = new MapNode(position, label, false, marker);
 

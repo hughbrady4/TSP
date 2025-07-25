@@ -61,7 +61,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity {
 
     private UserViewModel mUserViewModel;
     public static final String TAG = "TRAVELING_SALESMAN";
@@ -378,10 +378,4 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return super.onOptionsItemSelected(item);
     }
 
-
-    @Override
-    public void onMapReady(@NonNull GoogleMap map) {
-        MapCapabilities capabilities = map.getMapCapabilities();
-        Log.i(TAG, "Advanced marker enabled? " + capabilities.isAdvancedMarkersAvailable());
-    }
 }

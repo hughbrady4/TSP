@@ -11,10 +11,6 @@
         android:label="@string/title_home"
         tools:layout="@layout/fragment_user" >
 
-
-        <action
-            android:id="@+id/action_navigation_home_to_navigation_maps"
-            app:destination="@id/navigation_maps" />
     </fragment>
 
     <fragment
@@ -29,9 +25,5 @@
         android:label="Routes"
         tools:layout="@layout/fragment_route_list"/>
 
-    <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.organicsystemsllc.travelingsalesman.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+
 </navigation>

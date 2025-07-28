@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -37,6 +38,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -73,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
     private PendingIntent mPendingIntent;
     private MapsViewModel mMapsViewModel;
+    private AppBarConfiguration mAppBarConfiguration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,9 +83,8 @@ public class MainActivity extends AppCompatActivity {
 
         ActivityMainBinding mBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(mBinding.getRoot());
+        setSupportActionBar(mBinding.appBarNavDrawer.toolbar);
 
-        Toolbar myToolbar = findViewById(R.id.my_toolbar);
-        setSupportActionBar(myToolbar);
 
         // Initialize Firebase Auth
         FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -101,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        DrawerLayout drawer = mBinding.drawerLayout;
+        NavigationView navigationView = mBinding.navView2;
+
         mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         mMapsViewModel = new ViewModelProvider(this).get(MapsViewModel.class);
@@ -113,14 +118,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
 
-        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_maps, R.id.navigation_routes, R.id.navigation_notifications)
+                .setOpenableLayout(drawer)
                 .build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        BottomNavigationView navView = findViewById(R.id.nav_view);
-        NavigationUI.setupWithNavController(navView, navController);
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
+
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
 
 
         //Location permission request
@@ -376,6 +382,14 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
     }
 
 }

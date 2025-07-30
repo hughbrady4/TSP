@@ -5,12 +5,15 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.icu.text.DateFormat;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -18,8 +21,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -34,10 +37,7 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MapCapabilities;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -52,18 +52,18 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.organicsystemsllc.travelingsalesman.databinding.ActivityMainBinding;
-import com.organicsystemsllc.travelingsalesman.ui.login.UserData;
-import com.organicsystemsllc.travelingsalesman.ui.login.UserViewModel;
+import com.organicsystemsllc.travelingsalesman.ui.user.UserData;
+import com.organicsystemsllc.travelingsalesman.ui.user.UserViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private UserViewModel mUserViewModel;
     public static final String TAG = "TRAVELING_SALESMAN";
@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private PendingIntent mPendingIntent;
     private MapsViewModel mMapsViewModel;
     private AppBarConfiguration mAppBarConfiguration;
+    private DrawerLayout mDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
         ActivityMainBinding mBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(mBinding.getRoot());
         setSupportActionBar(mBinding.appBarNavDrawer.toolbar);
+        mDrawer = mBinding.drawerLayout;
+        NavigationView navigationView = mBinding.navView2;
+
+        mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
 
         // Initialize Firebase Auth
@@ -92,8 +97,25 @@ public class MainActivity extends AppCompatActivity {
             FirebaseUser currentUser = firebaseAuth.getCurrentUser();
             if(currentUser != null){
                 mUserViewModel.getUser().setValue(currentUser);
+                Uri uri = currentUser.getPhotoUrl();
                 mUserViewModel.getPhotoUri().setValue(currentUser.getPhotoUrl());
+//                ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageView);
+//                image.setImageURI(currentUser.getPhotoUrl());
                 getUserData(currentUser);
+
+                ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageViewNav);
+                TextView username = navigationView.getHeaderView(0).findViewById(R.id.username);
+                username.setText(currentUser.getDisplayName());
+                TextView email = navigationView.getHeaderView(0).findViewById(R.id.email);
+                email.setText(currentUser.getEmail());
+
+
+                Picasso.get()
+                        .load(uri)
+//                        .placeholder(R.drawable.placeholder_image) // Optional placeholder drawable
+//                        .error(R.drawable.error_image) // Optional error drawable
+                        .into(image);
+
 
             } else {
                 mUserViewModel.getUser().setValue(null);
@@ -102,11 +124,14 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+        mUserViewModel.getPhotoUri().observe(this, uri -> {
 
-        DrawerLayout drawer = mBinding.drawerLayout;
-        NavigationView navigationView = mBinding.navView2;
+        });
 
-        mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+
+
+
+
 
         mMapsViewModel = new ViewModelProvider(this).get(MapsViewModel.class);
         mUserViewModel.getTrackToggle().observeForever(track -> {
@@ -119,14 +144,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
+
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_maps, R.id.navigation_routes, R.id.navigation_notifications)
-                .setOpenableLayout(drawer)
+                R.id.navigation_maps, R.id.navigation_routes)
+                .setOpenableLayout(mDrawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
-
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        navigationView.setNavigationItemSelectedListener(this);
 
 
         //Location permission request
@@ -392,4 +419,31 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        int id = item.getItemId(); // Get the ID of the selected menu item
+
+        if (id == R.id.nav_sign_in) {
+            signIn();
+            mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
+            return true;
+        } else if (id == R.id.nav_sign_out) {
+            signOut();
+            mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
+            return true;
+        } else {
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
+            boolean val = NavigationUI.onNavDestinationSelected(item, navController);
+            mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
+            return val;
+        }
+
+
+
+
+
+
+    }
 }

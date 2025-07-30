@@ -81,6 +81,7 @@ dependencies {
     implementation libs.play.services.maps.v1900
     implementation libs.android.maps.utils
 
+    implementation libs.picasso // Use the latest stable version
 
     // Stripe Android SDK
 //    implementation(libs.stripe.android)

@@ -1,4 +1,4 @@
-package com.organicsystemsllc.travelingsalesman.ui.login;
+package com.organicsystemsllc.travelingsalesman.ui.user;
 
 import com.google.firebase.Timestamp;
 

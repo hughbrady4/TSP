@@ -6,8 +6,8 @@
     app:startDestination="@+id/navigation_maps">
 
     <fragment
-        android:id="@+id/navigation_home"
-        android:name="com.organicsystemsllc.travelingsalesman.ui.login.UserFragment"
+        android:id="@+id/navigation_user"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.user.UserFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_user" >
 

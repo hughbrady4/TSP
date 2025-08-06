@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,9 +30,11 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -41,7 +44,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.AdvancedMarker;
 import com.google.android.gms.maps.model.AdvancedMarkerOptions;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.Marker;
@@ -58,7 +60,8 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.maps.android.PolyUtil;
-import com.organicsystemsllc.travelingsalesman.ItemListDialogFragment;
+import com.organicsystemsllc.travelingsalesman.BuildConfig;
+import com.organicsystemsllc.travelingsalesman.NodeListFragment;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
@@ -71,6 +74,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
@@ -96,9 +100,34 @@ public class MapsFragment extends Fragment implements
                 @SuppressLint("PotentialBehaviorOverride")
                 @Override
                 public boolean onMarkerClick(@NonNull Marker marker) {
-                    ItemListDialogFragment.newInstance(30).show(requireActivity()
-                            .getSupportFragmentManager(), "dialog");
+
                     return false;
+                }
+            });
+
+            mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+                @Override
+                public void onMarkerDrag(@NonNull Marker marker) {
+
+                }
+
+                @Override
+                public void onMarkerDragEnd(@NonNull Marker marker) {
+                    MapNode node = (MapNode) marker.getTag();
+
+                }
+
+                @Override
+                public void onMarkerDragStart(@NonNull Marker marker) {
+
+                }
+            });
+
+            mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+                @Override
+                public void onPolylineClick(@NonNull Polyline polyline) {
+                    NodeListFragment.newInstance().show(requireActivity()
+                        .getSupportFragmentManager(), "dialog");
                 }
             });
 
@@ -119,34 +148,41 @@ public class MapsFragment extends Fragment implements
 
             setListeners();
 
-            getNodes();
+            mMapsViewModel.getNodes().observeForever(new Observer<HashMap<String, MapNode>>() {
+                @Override
+                public void onChanged(HashMap<String, MapNode> mapNodes) {
+                    callRouteApi(mapNodes);
+                }
+            });
 
             mMapsViewModel.getRoute().observe(getViewLifecycleOwner(),
                 route -> {
                     if (route != null && route.getPolyline() != null) {
-                        Polyline line = addEdgeToMap(route.getPolyline(), map);
+                        addEdgeToMap(route.getPolyline(), map);
+                        NodeListFragment.newInstance().show(requireActivity()
+                                .getSupportFragmentManager(), "dialog");
                     }
             });
 
-            Button clear = mBinding.clear;
-            clear.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+//            Button clear = mBinding.clear;
+//            clear.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//
+//                    map.clear();
+//                    mMapsViewModel.getNodes().setValue(null);
+//                    mMapsViewModel.getRoute().setValue(null);
+//                }
+//            });
 
-                    map.clear();
-                    mMapsViewModel.getNodes().setValue(null);
-                    mMapsViewModel.getRoute().setValue(null);
-                }
-            });
-
-            Button save = mBinding.save;
-            save.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    SaveRouteDialogFragment dialog = new SaveRouteDialogFragment();
-                    dialog.show(requireActivity().getSupportFragmentManager(), "SAVE_DIALOG");
-                }
-            });
+//            Button save = mBinding.save;
+//            save.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    SaveRouteDialogFragment dialog = new SaveRouteDialogFragment();
+//                    dialog.show(requireActivity().getSupportFragmentManager(), "SAVE_DIALOG");
+//                }
+//            });
         }
     };
 
@@ -181,47 +217,58 @@ public class MapsFragment extends Fragment implements
     private void addMarkerToMap(LatLng position) {
 
 
-        final MutableLiveData<ArrayList<MapNode>> nodes = mMapsViewModel.getNodes();
-        ArrayList<MapNode> newList;
+        final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
+        HashMap<String, MapNode> newList;
         if (nodes.getValue() != null) {
-            newList = new ArrayList<MapNode>(nodes.getValue());
+            newList = new HashMap<>(nodes.getValue());
 
         } else {
-            newList = new ArrayList<MapNode>();
+            newList = new HashMap<>();
 
         }
+
         int index = newList.size();
-        String label = String.valueOf(LABELS[index % LABELS.length]);
 
-        PinConfig pinConfig = PinConfig.builder()
-                .setBackgroundColor(Color.GRAY)
-                .setBorderColor(Color.BLACK)
-                .setGlyph(new PinConfig.Glyph(label))
-                .build();
+        if (index < LABELS.length) {
 
-        AdvancedMarkerOptions options = new AdvancedMarkerOptions()
-                .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
-                .title(label)
-                .position(position)
-                .draggable(true);
+            String label = String.valueOf(LABELS[index % LABELS.length]);
 
-        AdvancedMarker marker = (AdvancedMarker) mMap.addMarker(options);
+            PinConfig pinConfig = PinConfig.builder()
+                    .setBackgroundColor(Color.GRAY)
+                    .setBorderColor(Color.BLACK)
+                    .setGlyph(new PinConfig.Glyph(label))
+                    .build();
 
+            AdvancedMarkerOptions options = new AdvancedMarkerOptions()
+                    .icon(BitmapDescriptorFactory.fromPinConfig(pinConfig))
+                    .title(label)
+                    .position(position)
+                    .draggable(true);
 
-        MapNode newNode = new MapNode(position, label, false, marker);
-
-        newList.add(newNode);
-
-        nodes.setValue(newList);
+            AdvancedMarker marker = (AdvancedMarker) mMap.addMarker(options);
 
 
+            MapNode newNode = new MapNode(position, label, false, marker);
+            if (marker != null) {
+                reverseGeoCode(marker, newNode);
+            }
+
+
+            newList.put(label, newNode);
+
+            nodes.setValue(newList);
+        }
 
 
     }
 
     private Polyline addEdgeToMap(String encodedPolyline, GoogleMap map) {
         List<LatLng> path = PolyUtil.decode(encodedPolyline);
-        PolylineOptions options = new PolylineOptions().clickable(true);
+        PolylineOptions options = new PolylineOptions()
+                .clickable(true)
+                .width(25)
+                .color(Color.BLUE)
+                .geodesic(true);
         path.forEach(new Consumer<LatLng>() {
             @Override
             public void accept(LatLng latLng) {
@@ -249,64 +296,20 @@ public class MapsFragment extends Fragment implements
             mapFragment.getMapAsync(mCallback);
         }
 
-//        FloatingActionButton fab;
-        Button getRoute = mBinding.getRoute;
-        getRoute.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                final MutableLiveData<ArrayList<MapNode>> nodes = mMapsViewModel.getNodes();
-                if (nodes.getValue() != null) {
-
-
-
-                    String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
-                    RouteRequest routeRequest = new
-                        RouteRequest(url, new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                Route route = new Route(response);
-                                mMapsViewModel.getRoute().setValue(route);
-//                                addRouteToFirestore(route);
-                            }
-                        }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.e(TAG, "Failed! " + error.getLocalizedMessage());
-                        }
-                    });
-
-
-
-                routeRequest.setNodes(nodes.getValue());
-                Log.i(TAG, String.valueOf(nodes.getValue()));
-//                LinkedList<MapNode> copyNodes = (LinkedList<MapNode>) nodes.getValue().clone();
-//                routeRequest.setMapNodes(copyNodes);
-                // Add the request to the RequestQueue.
-                RequestQueue queue = Volley.newRequestQueue(requireActivity());
-                queue.add(routeRequest);
-
-                }
-
-
-            }
-        });
-
-
         mMapsViewModel.getRoute().observeForever(new Observer<Route>() {
             @Override
             public void onChanged(Route route) {
                 if (route != null) {
-                    mBinding.getRoute.setEnabled(false);
-                    mBinding.getRoute.setVisibility(View.INVISIBLE);
-                    mBinding.save.setEnabled(true);
-                    mBinding.save.setVisibility(View.VISIBLE);
+//                    mBinding.getRoute.setEnabled(false);
+//                    mBinding.getRoute.setVisibility(View.INVISIBLE);
+//                    mBinding.save.setEnabled(true);
+//                    mBinding.save.setVisibility(View.VISIBLE);
 
                 } else {
-                    mBinding.getRoute.setEnabled(true);
-                    mBinding.getRoute.setVisibility(View.VISIBLE);
-                    mBinding.save.setEnabled(false);
-                    mBinding.save.setVisibility(View.INVISIBLE);
+//                    mBinding.getRoute.setEnabled(true);
+//                    mBinding.getRoute.setVisibility(View.VISIBLE);
+//                    mBinding.save.setEnabled(false);
+//                    mBinding.save.setVisibility(View.INVISIBLE);
 
                 }
 
@@ -348,7 +351,6 @@ public class MapsFragment extends Fragment implements
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Initialize Firebase Auth
-
         mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
 
         mLocationPermissionRequest = registerForActivityResult(new ActivityResultContracts
@@ -448,6 +450,45 @@ public class MapsFragment extends Fragment implements
 
     }
 
+    private void reverseGeoCode(Marker marker, MapNode node) {
+        Uri.Builder url = new Uri.Builder();
+        url.scheme("https")
+                .authority("maps.googleapis.com")
+                .appendPath("maps")
+                .appendPath("api")
+                .appendPath("geocode")
+                .appendPath("json");
+
+        url.appendQueryParameter("latlng", marker.getPosition().latitude + "," + marker.getPosition().longitude);
+        url.appendQueryParameter("result_type", "street_address");
+        url.appendQueryParameter("key", BuildConfig.TSP_API_KEY);
+
+        Log.i(TAG, url.toString());
+
+        JsonObjectRequest jsonObjectRequest = new
+                JsonObjectRequest(Request.Method.POST, url.build().toString(), null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                        GeoCodeResult result = new GeoCodeResult(response);
+//                        marker.setSnippet(result.getFormattedAddress());
+                        node.setFormattedAddress(result.getFormattedAddress());
+                        //add to firebase
+                     }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, Objects.requireNonNull(error.getLocalizedMessage()));
+            }
+        });
+
+        // Add the request to the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(requireActivity());
+        queue.add(jsonObjectRequest);
+
+    }
+
     @Override
     public void onCameraIdle() {
 
@@ -488,6 +529,36 @@ public class MapsFragment extends Fragment implements
             // Create the AlertDialog object and return it.
             return builder.create();
         }
+    }
+
+    public void callRouteApi(HashMap<String, MapNode> nodes) {
+
+        if (nodes == null || nodes.size() < 2) return;
+
+
+        String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
+            RouteRequest routeRequest = new
+                RouteRequest(url, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Route route = new Route(response);
+                        mMapsViewModel.getRoute().setValue(route);
+    //                                addRouteToFirestore(route);
+                    }
+                }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Failed! " + error.getLocalizedMessage());
+                }
+            });
+
+        routeRequest.setNodes(new ArrayList<>(nodes.values()));
+        Log.i(TAG, String.valueOf(nodes));
+
+        // Add the request to the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(requireActivity());
+        queue.add(routeRequest);
+
     }
 
 }

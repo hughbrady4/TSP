@@ -7,6 +7,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 
@@ -18,7 +19,7 @@ public class MapsViewModel extends ViewModel {
     private final MutableLiveData<Boolean> mOnlineToggle;
     private final MutableLiveData<LatLng> mLatLng;
     private final MutableLiveData<MapNode> mUserLocation;
-    private final MutableLiveData<ArrayList<MapNode>> mNodes;
+    private final MutableLiveData<HashMap<String, MapNode>> mNodes;
 
 
     public MapsViewModel() {
@@ -55,7 +56,7 @@ public class MapsViewModel extends ViewModel {
         return mUserLocation;
     }
 
-    public MutableLiveData<ArrayList<MapNode>> getNodes() {
+    public MutableLiveData<HashMap<String, MapNode>> getNodes() {
         return mNodes;
     }
 }

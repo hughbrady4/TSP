@@ -13,29 +13,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * A fragment representing a list of Items.
@@ -61,36 +50,7 @@ public class RouteFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        FirebaseUser user = mAuth.getCurrentUser();
-        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
-        CollectionReference mUserCollection = mFireStore.collection("users");
 
-        if (user != null) {
-            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-
-            mUserCollection.document(user.getUid()).collection("routes")
-                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d(MainActivity.TAG, document.getId() + " => " + document.getData());
-//                                LatLng pos = (LatLng) document.get("position");
-                                Boolean visited = (Boolean) document.getBoolean("visited");
-                                String address = (String) document.getString("formatted_address");
-                                RecyclerView listView = (RecyclerView) getView();
-
-                            }
-                        } else {
-                            Log.d(MainActivity.TAG, "Error getting documents: ", task.getException());
-                        }
-
-
-                    }
-                });
-
-        }
 
 
 
@@ -114,7 +74,41 @@ public class RouteFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+        final RecyclerView recyclerView = (RecyclerView) view;
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
+
+        if (user != null) {
+            DocumentReference docRef = mFireStore.collection("users").document(user.getUid());
+            docRef.collection("routes")
+                    .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                ArrayList<Route> routes = new ArrayList<Route>();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d(MainActivity.TAG, document.getId() + " => " + document.getData());
+
+                                    String routeId = document.getId();
+                                    Route route = document.toObject(Route.class);
+                                    route.setLabel(routeId);
+                                    routes.add(route);
+
+
+                                }
+                                RecyclerView listView = (RecyclerView) getView();
+                                recyclerView.setAdapter(new RouteAdapter(routes));
+                            } else {
+                                Log.d(MainActivity.TAG, "Error getting documents: ", task.getException());
+                            }
+
+
+                        }
+                    });
+
+        }
+
     }
 
     @Override

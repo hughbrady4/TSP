@@ -9,11 +9,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentRouteBinding;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> {
 
 
+    private final ArrayList<Route> mRoutes;
+
+    public RouteAdapter(ArrayList<Route> routes) {
+        mRoutes = routes;
+    }
 
     @NonNull
     @Override
@@ -25,12 +31,14 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        holder.mLabel.setText(mRoutes.get(position).getLabel());
+
 
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return mRoutes.size();
     }
 
 

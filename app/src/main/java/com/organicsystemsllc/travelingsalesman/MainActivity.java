@@ -8,6 +8,7 @@ import android.icu.text.DateFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,6 +39,9 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -181,6 +185,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+
+        // Define a variable to hold the Places API key.
+        String apiKey = BuildConfig.TSP_API_KEY;
+
+        // Log an error if apiKey is not set.
+        if (TextUtils.isEmpty(apiKey)) {
+            Log.e("Places test", "No api key");
+            finish();
+            return;
+        }
+
+        // Initialize the SDK
+        Places.initializeWithNewPlacesApiEnabled(getApplicationContext(), apiKey);
+
+        // Create a new PlacesClient instance
+        PlacesClient placesClient = Places.createClient(this);
     }
 
     private void getUserData(FirebaseUser currentUser) {
@@ -285,6 +305,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
+
+
 
 
     }
@@ -439,11 +461,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
             return val;
         }
+    }
 
-
-
-
+    private void search() {
 
 
     }
+
 }

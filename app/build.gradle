@@ -61,6 +61,13 @@ android {
 }
 
 dependencies {
+
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
+    implementation("com.google.android.libraries.places:places:3.5.0")
+    implementation("com.google.maps.android:places-ktx:3.3.1")
+
+    implementation "androidx.cardview:cardview:1.0.0"
+
     implementation libs.appcompat
     implementation libs.material
     implementation libs.constraintlayout
@@ -110,13 +117,9 @@ dependencies {
 
     implementation "androidx.room:room-rxjava3:$room_version"
 
-//    implementation "androidx.car.app:app:1.4.0"
 
-    // For Android Auto specific functionality
-//    implementation "androidx.car.app:app-projected:1.4.0"
 
-//    implementation "androidx.car.app:app:$car_app_library_version"
-//    implementation project(":common:data")
+
 
 
 

@@ -15,12 +15,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListBinding;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListItemBinding;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
+import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +30,7 @@ import java.util.HashMap;
 public class NodeListFragment extends BottomSheetDialogFragment {
 
     private static final String ARG_NODES = "nodes";
-    private FragmentNodeListBinding binding;
+    private FragmentNodeListBinding mBinding;
 
 
     public static NodeListFragment newInstance() {
@@ -43,8 +45,8 @@ public class NodeListFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        binding = FragmentNodeListBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+        mBinding = FragmentNodeListBinding.inflate(inflater, container, false);
+        return mBinding.getRoot();
 
     }
 
@@ -55,30 +57,52 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         MapsViewModel mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
         final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
         if (nodes != null && nodes.getValue() != null) {
-            recyclerView.setAdapter(new ItemAdapter(new ArrayList<>(nodes.getValue().values())));
+            ItemAdapter adapter = new ItemAdapter(new ArrayList<>(nodes.getValue().values()));
+            recyclerView.setAdapter(adapter);
         }
+        final MutableLiveData<Route> routeData = mMapsViewModel.getRoute();
+        Route route = routeData.getValue();
+        if (route != null) {
+            mBinding.tvDistance.setText(route.getDistanceMeters().toString());
+            mBinding.tvDuration.setText(route.getDuration());
+        }
+
+        Button clear = mBinding.clear;
+        clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                map.clear();
+                mMapsViewModel.getNodes().setValue(null);
+                mMapsViewModel.getRoute().setValue(null);
+            }
+        });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null;
+        mBinding = null;
     }
 
-    private class ViewHolder extends RecyclerView.ViewHolder {
+    private static class ViewHolder extends RecyclerView.ViewHolder {
 
-        final TextView text;
+        final TextView tv_label;
+        final TextView tv_address;
+
 
         ViewHolder(FragmentNodeListItemBinding binding) {
             super(binding.getRoot());
-            text = binding.text;
+            tv_label = binding.tvNodeLabel;
+            tv_address = binding.tvNodeAddress;
+
         }
 
     }
 
-    private class ItemAdapter extends RecyclerView.Adapter<ViewHolder> {
+    private static class ItemAdapter extends RecyclerView.Adapter<ViewHolder> {
 
         private final ArrayList<MapNode> mNodes;
+        private Route mRoute;
 
         ItemAdapter(ArrayList<MapNode> nodes) {
             mNodes = nodes;
@@ -96,10 +120,12 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         public void onBindViewHolder(ViewHolder holder, int position) {
             String address = mNodes.get(position).getFormattedAddress();
             if (address != null && !address.isEmpty()) {
-                holder.text.setText(address);
+                holder.tv_address.setText(address);
             } else {
-                holder.text.setText(mNodes.get(position).getPosition().toString());
+                holder.tv_address.setText(mNodes.get(position).getPosition().toString());
             }
+            String label = mNodes.get(position).getLabel();
+            holder.tv_label.setText(label);
         }
 
         @Override

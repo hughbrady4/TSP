@@ -58,4 +58,6 @@
     <string name="menu_slideshow">Slideshow</string>
     <string name="sign_out">Sign out</string>
     <string name="sign_in">Sign in</string>
+    <string name="distance">Distance</string>
+    <string name="duration">Duration</string>
 </resources>

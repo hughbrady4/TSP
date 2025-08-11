@@ -36,6 +36,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -52,6 +53,9 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -71,6 +75,7 @@ import com.organicsystemsllc.travelingsalesman.ui.route.RouteRequest;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +92,7 @@ public class MapsFragment extends Fragment implements
     private GoogleMap mMap;
     private static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
+    private Polyline mLine;
     private final OnMapReadyCallback mCallback = new OnMapReadyCallback() {
 
         @SuppressLint("PotentialBehaviorOverride")
@@ -113,12 +119,29 @@ public class MapsFragment extends Fragment implements
 
                 @Override
                 public void onMarkerDragEnd(@NonNull Marker marker) {
-                    MapNode node = (MapNode) marker.getTag();
+//                    MapNode node = (MapNode) marker.getTag();
+                    String label = marker.getTitle();
+//                    if (node != null) {
+                    final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
+                    HashMap<String, MapNode> newList;
+                    if (nodes.getValue() != null) {
+                        MapNode node = nodes.getValue().get(label);
+                        if (node != null) {
+                            node.setPosition(marker.getPosition());
+                            newList = new HashMap<>(nodes.getValue());
+                            nodes.setValue(newList);
+                        }
+                    }
+
+
+//                    }
 
                 }
 
                 @Override
                 public void onMarkerDragStart(@NonNull Marker marker) {
+                    mMapsViewModel.getRoute().setValue(null);
+
 
                 }
             });
@@ -158,22 +181,17 @@ public class MapsFragment extends Fragment implements
             mMapsViewModel.getRoute().observe(getViewLifecycleOwner(),
                 route -> {
                     if (route != null && route.getPolyline() != null) {
-                        addEdgeToMap(route.getPolyline(), map);
+                        mLine = addEdgeToMap(route.getPolyline(), map);
                         NodeListFragment.newInstance().show(requireActivity()
                                 .getSupportFragmentManager(), "dialog");
+                    } else {
+                        if (mLine != null) {
+                            mLine.remove();
+                        }
                     }
             });
 
-//            Button clear = mBinding.clear;
-//            clear.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//
-//                    map.clear();
-//                    mMapsViewModel.getNodes().setValue(null);
-//                    mMapsViewModel.getRoute().setValue(null);
-//                }
-//            });
+
 
 //            Button save = mBinding.save;
 //            save.setOnClickListener(new View.OnClickListener() {
@@ -251,6 +269,7 @@ public class MapsFragment extends Fragment implements
             MapNode newNode = new MapNode(position, label, false, marker);
             if (marker != null) {
                 reverseGeoCode(marker, newNode);
+                marker.setTag(newNode);
             }
 
 
@@ -263,6 +282,9 @@ public class MapsFragment extends Fragment implements
     }
 
     private Polyline addEdgeToMap(String encodedPolyline, GoogleMap map) {
+        if (mLine != null) {
+            mLine.remove();
+        }
         List<LatLng> path = PolyUtil.decode(encodedPolyline);
         PolylineOptions options = new PolylineOptions()
                 .clickable(true)
@@ -295,6 +317,30 @@ public class MapsFragment extends Fragment implements
         if (mapFragment != null) {
             mapFragment.getMapAsync(mCallback);
         }
+
+        // Initialize the AutocompleteSupportFragment.
+//        AutocompleteSupportFragment autocompleteFragment;
+//
+//        // Specify the types of place data to return.
+//        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+//
+//        // Set up a PlaceSelectionListener to handle the response.
+//        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+//            @Override
+//            public void onPlaceSelected(@NonNull Place place) {
+//                // TODO: Get info about the selected place.
+//                Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
+//            }
+//
+//
+//            @Override
+//            public void onError(@NonNull Status status) {
+//                // TODO: Handle the error.
+//                Log.i(TAG, "An error occurred: " + status);
+//            }
+//        });
+
+
 
         mMapsViewModel.getRoute().observeForever(new Observer<Route>() {
             @Override

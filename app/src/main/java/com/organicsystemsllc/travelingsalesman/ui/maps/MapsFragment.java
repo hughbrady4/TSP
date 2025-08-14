@@ -174,6 +174,10 @@ public class MapsFragment extends Fragment implements
             mMapsViewModel.getNodes().observeForever(new Observer<HashMap<String, MapNode>>() {
                 @Override
                 public void onChanged(HashMap<String, MapNode> mapNodes) {
+                    //clear map if nodes are null
+                    if (mapNodes == null) {
+                        map.clear();
+                    }
                     callRouteApi(mapNodes);
                 }
             });
@@ -318,28 +322,37 @@ public class MapsFragment extends Fragment implements
             mapFragment.getMapAsync(mCallback);
         }
 
-        // Initialize the AutocompleteSupportFragment.
-//        AutocompleteSupportFragment autocompleteFragment;
-//
-//        // Specify the types of place data to return.
-//        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
-//
-//        // Set up a PlaceSelectionListener to handle the response.
-//        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-//            @Override
-//            public void onPlaceSelected(@NonNull Place place) {
-//                // TODO: Get info about the selected place.
-//                Log.i(TAG, "Place: " + place.getName() + ", " + place.getId());
-//            }
-//
-//
-//            @Override
-//            public void onError(@NonNull Status status) {
-//                // TODO: Handle the error.
-//                Log.i(TAG, "An error occurred: " + status);
-//            }
-//        });
+        // Initialize the AutocompleteSupportFragment.;
 
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getChildFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        // Specify the types of place data to return.
+        if (autocompleteFragment != null) {
+            autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LOCATION));
+
+        // Set up a PlaceSelectionListener to handle the response.
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(@NonNull Place place) {
+                // TODO: Get info about the selected place.
+                Log.i(TAG, "Place: " + place.toString());
+                addMarkerToMap(place.getLocation());
+                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
+
+                mMap.moveCamera(update);
+
+            }
+
+
+            @Override
+            public void onError(@NonNull Status status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+
+        }
 
 
         mMapsViewModel.getRoute().observeForever(new Observer<Route>() {
@@ -459,6 +472,7 @@ public class MapsFragment extends Fragment implements
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
+
                         Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
                     }
                 })

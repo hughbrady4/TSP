@@ -16,7 +16,7 @@
     <fragment
         android:id="@+id/navigation_maps"
         android:name="com.organicsystemsllc.travelingsalesman.ui.maps.MapsFragment"
-        android:label="Map"
+        android:label="Traveling Salesman"
         tools:layout="@layout/fragment_maps"/>
 
     <fragment

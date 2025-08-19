@@ -23,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -39,7 +38,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.navigation.NavigationView;
@@ -56,18 +54,18 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.organicsystemsllc.travelingsalesman.databinding.ActivityMainBinding;
-import com.organicsystemsllc.travelingsalesman.ui.user.UserData;
-import com.organicsystemsllc.travelingsalesman.ui.user.UserViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
+import com.organicsystemsllc.travelingsalesman.ui.user.UserData;
+import com.organicsystemsllc.travelingsalesman.ui.user.UserViewModel;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
     private UserViewModel mUserViewModel;
     public static final String TAG = "TRAVELING_SALESMAN";
@@ -109,10 +107,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageViewNav);
                 TextView username = navigationView.getHeaderView(0).findViewById(R.id.username);
-                username.setText(currentUser.getDisplayName());
-                TextView email = navigationView.getHeaderView(0).findViewById(R.id.email);
-                email.setText(currentUser.getEmail());
-
+                if (currentUser.getDisplayName() != null && !currentUser.getDisplayName().isEmpty()) {
+                    username.setText(currentUser.getDisplayName());
+                } else {
+                    username.setText(currentUser.getEmail());
+                }
 
                 Picasso.get()
                         .load(uri)
@@ -138,14 +137,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         mMapsViewModel = new ViewModelProvider(this).get(MapsViewModel.class);
-        mUserViewModel.getTrackToggle().observeForever(track -> {
-            Log.i(TAG, "Track indicator updated: " + track.toString());
-            if (Boolean.TRUE.equals(track)) {
-                startLocationUpdates();
-            } else {
-                stopLocationUpdates();
-            }
-        });
+//        mUserViewModel.getTrackToggle().observeForever(track -> {
+//            Log.i(TAG, "Track indicator updated: " + track.toString());
+//            if (Boolean.TRUE.equals(track)) {
+//                startLocationUpdates();
+//            } else {
+//                stopLocationUpdates();
+//            }
+//        });
 
 
 
@@ -157,31 +156,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
-        navigationView.setNavigationItemSelectedListener(this);
 
 
         //Location permission request
-        mLocationPermissionRequest = registerForActivityResult(new ActivityResultContracts
-                .RequestMultiplePermissions(), result -> {
-
-            Boolean fineGranted = result
-                    .getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION,
-                            false);
-            Boolean coarseGranted = result
-                    .getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                            false);
-
-            Boolean backgroundGranted = result
-                    .getOrDefault(Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                            false);
-            if (Boolean.FALSE.equals(backgroundGranted)) {
-                return;
-            }
-
-            if (Boolean.TRUE.equals(fineGranted) || Boolean.TRUE.equals(coarseGranted)) {
-                startLocationUpdates();
-            }
-        });
+//        mLocationPermissionRequest = registerForActivityResult(new ActivityResultContracts
+//                .RequestMultiplePermissions(), result -> {
+//
+//            Boolean fineGranted = result
+//                    .getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION,
+//                            false);
+//            Boolean coarseGranted = result
+//                    .getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION,
+//                            false);
+//
+//            Boolean backgroundGranted = result
+//                    .getOrDefault(Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+//                            false);
+//            if (Boolean.FALSE.equals(backgroundGranted)) {
+//                return;
+//            }
+//
+//            if (Boolean.TRUE.equals(fineGranted) || Boolean.TRUE.equals(coarseGranted)) {
+//                startLocationUpdates();
+//            }
+//        });
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -441,27 +439,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 || super.onSupportNavigateUp();
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        super.onOptionsItemSelected(item);
-
-        int id = item.getItemId(); // Get the ID of the selected menu item
-
-        if (id == R.id.nav_sign_in) {
-            signIn();
-            mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
-            return true;
-        } else if (id == R.id.nav_sign_out) {
-            signOut();
-            mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
-            return true;
-        } else {
-            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
-            boolean val = NavigationUI.onNavDestinationSelected(item, navController);
-            mDrawer.closeDrawer(GravityCompat.START); // Close the navigation drawer after selection
-            return val;
-        }
-    }
 
     private void search() {
 

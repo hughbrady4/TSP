@@ -65,8 +65,9 @@ public class MapNode {
     public String toString() {
         return "MapNode{" +
                 "Position=" + mPosition +
-                ", Label='" + mLabel + '\'' +
+                ", Label='" + mLabel  +
                 ", Visited=" + mVisited +
+                ", Address=" + mFormattedAddress +
                 '}';
     }
 

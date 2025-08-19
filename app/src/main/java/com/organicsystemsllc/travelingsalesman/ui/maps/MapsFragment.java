@@ -65,6 +65,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.maps.android.PolyUtil;
 import com.organicsystemsllc.travelingsalesman.BuildConfig;
+import com.organicsystemsllc.travelingsalesman.NodeDetailFragment;
 import com.organicsystemsllc.travelingsalesman.NodeListFragment;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
 import com.organicsystemsllc.travelingsalesman.R;
@@ -106,10 +107,12 @@ public class MapsFragment extends Fragment implements
                 @SuppressLint("PotentialBehaviorOverride")
                 @Override
                 public boolean onMarkerClick(@NonNull Marker marker) {
-
+                    NodeDetailFragment.newInstance(marker.getTitle()).show(requireActivity()
+                            .getSupportFragmentManager(), "dialog");
                     return false;
                 }
             });
+
 
             mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
                 @Override
@@ -128,8 +131,13 @@ public class MapsFragment extends Fragment implements
                         MapNode node = nodes.getValue().get(label);
                         if (node != null) {
                             node.setPosition(marker.getPosition());
+                            reverseGeoCode(marker, node);
+
                             newList = new HashMap<>(nodes.getValue());
                             nodes.setValue(newList);
+
+                            NodeDetailFragment.newInstance(label).show(requireActivity()
+                                    .getSupportFragmentManager(), "dialog");
                         }
                     }
 
@@ -178,7 +186,7 @@ public class MapsFragment extends Fragment implements
                     if (mapNodes == null) {
                         map.clear();
                     }
-                    callRouteApi(mapNodes);
+//                    callRouteApi(mapNodes);
                 }
             });
 
@@ -256,7 +264,7 @@ public class MapsFragment extends Fragment implements
             String label = String.valueOf(LABELS[index % LABELS.length]);
 
             PinConfig pinConfig = PinConfig.builder()
-                    .setBackgroundColor(Color.GRAY)
+                    .setBackgroundColor(Color.WHITE)
                     .setBorderColor(Color.BLACK)
                     .setGlyph(new PinConfig.Glyph(label))
                     .build();
@@ -280,6 +288,8 @@ public class MapsFragment extends Fragment implements
             newList.put(label, newNode);
 
             nodes.setValue(newList);
+            NodeDetailFragment.newInstance(label).show(requireActivity()
+                    .getSupportFragmentManager(), "dialog");
         }
 
 
@@ -534,6 +544,11 @@ public class MapsFragment extends Fragment implements
                         GeoCodeResult result = new GeoCodeResult(response);
 //                        marker.setSnippet(result.getFormattedAddress());
                         node.setFormattedAddress(result.getFormattedAddress());
+                        HashMap<String, MapNode> currentData = mMapsViewModel.getNodes().getValue();
+                        if (currentData != null) {
+                            currentData.put(node.getLabel(), node);
+                            mMapsViewModel.getNodes().setValue(currentData); // Post updated HashMap to LiveData
+                        }
                         //add to firebase
                      }
                 }, new Response.ErrorListener() {

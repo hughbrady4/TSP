@@ -60,22 +60,22 @@ public class NodeListFragment extends BottomSheetDialogFragment {
             ItemAdapter adapter = new ItemAdapter(new ArrayList<>(nodes.getValue().values()));
             recyclerView.setAdapter(adapter);
         }
-        final MutableLiveData<Route> routeData = mMapsViewModel.getRoute();
-        Route route = routeData.getValue();
-        if (route != null) {
-            mBinding.tvDistance.setText(route.getDistanceMeters().toString());
-            mBinding.tvDuration.setText(route.getDuration());
-        }
+//        final MutableLiveData<Route> routeData = mMapsViewModel.getRoute();
+//        Route route = routeData.getValue();
+//        if (route != null) {
+//            mBinding.tvDistance.setText(route.getDistanceMeters().toString());
+//            mBinding.tvDuration.setText(route.getDuration());
+//        }
 
-        Button clear = mBinding.clear;
-        clear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                map.clear();
-                mMapsViewModel.getNodes().setValue(null);
-                mMapsViewModel.getRoute().setValue(null);
-            }
-        });
+//        Button clear = mBinding.clear;
+//        clear.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+////                map.clear();
+//                mMapsViewModel.getNodes().setValue(null);
+//                mMapsViewModel.getRoute().setValue(null);
+//            }
+//        });
     }
 
     @Override

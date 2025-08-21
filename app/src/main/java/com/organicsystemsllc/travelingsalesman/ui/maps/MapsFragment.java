@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -46,6 +45,7 @@ import com.google.android.gms.maps.model.AdvancedMarker;
 import com.google.android.gms.maps.model.AdvancedMarkerOptions;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PinConfig;
@@ -54,6 +54,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.snackbar.Snackbar;
@@ -205,19 +206,13 @@ public class MapsFragment extends Fragment implements
 
 
 
-//            Button save = mBinding.save;
-//            save.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    SaveRouteDialogFragment dialog = new SaveRouteDialogFragment();
-//                    dialog.show(requireActivity().getSupportFragmentManager(), "SAVE_DIALOG");
-//                }
-//            });
+
         }
     };
 
     private void setListeners() {
 
+        mMap.setOnCameraMoveListener(this);
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(@NonNull LatLng latLng) {
@@ -281,7 +276,6 @@ public class MapsFragment extends Fragment implements
             MapNode newNode = new MapNode(position, label, false, marker);
             if (marker != null) {
                 reverseGeoCode(marker, newNode);
-                marker.setTag(newNode);
             }
 
 
@@ -337,30 +331,36 @@ public class MapsFragment extends Fragment implements
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getChildFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
+//        final LatLngBounds latLngBounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+//
+//        autocompleteFragment.setLocationBias(RectangularBounds.newInstance(
+//                latLngBounds.southwest,
+//                latLngBounds.northeast));
+
         // Specify the types of place data to return.
         if (autocompleteFragment != null) {
             autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LOCATION));
 
         // Set up a PlaceSelectionListener to handle the response.
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(@NonNull Place place) {
-                // TODO: Get info about the selected place.
-                Log.i(TAG, "Place: " + place.toString());
-                addMarkerToMap(place.getLocation());
-                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
+            autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+                @Override
+                public void onPlaceSelected(@NonNull Place place) {
+                    // TODO: Get info about the selected place.
+                    Log.i(TAG, "Place: " + place.toString());
+                    addMarkerToMap(place.getLocation());
+                    CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
+                    mMap.moveCamera(update);
+                    autocompleteFragment.setText("");
 
-                mMap.moveCamera(update);
-
-            }
+                }
 
 
-            @Override
-            public void onError(@NonNull Status status) {
-                // TODO: Handle the error.
-                Log.i(TAG, "An error occurred: " + status);
-            }
-        });
+                @Override
+                public void onError(@NonNull Status status) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, "An error occurred: " + status);
+                }
+            });
 
         }
 
@@ -576,6 +576,14 @@ public class MapsFragment extends Fragment implements
 
     @Override
     public void onCameraMove() {
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getChildFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        final LatLngBounds latLngBounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+
+        autocompleteFragment.setLocationBias(RectangularBounds.newInstance(
+                latLngBounds.southwest,
+                latLngBounds.northeast));
 
     }
 
@@ -584,27 +592,7 @@ public class MapsFragment extends Fragment implements
 
     }
 
-    public static class SaveRouteDialogFragment extends DialogFragment {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction.
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
-            builder.setMessage(R.string.dialog_save_route)
-                    .setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // START THE GAME!
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User cancels the dialog.
-                        }
-                    });
-            // Create the AlertDialog object and return it.
-            return builder.create();
-        }
-    }
+
 
     public void callRouteApi(HashMap<String, MapNode> nodes) {
 
@@ -623,6 +611,7 @@ public class MapsFragment extends Fragment implements
                 }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
+
                     Log.e(TAG, "Failed! " + error.getLocalizedMessage());
                 }
             });

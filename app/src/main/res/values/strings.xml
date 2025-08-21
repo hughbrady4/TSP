@@ -60,4 +60,7 @@
     <string name="sign_in">Sign in</string>
     <string name="distance">Distance</string>
     <string name="duration">Duration</string>
+    <string name="delete">Delete</string>
+    <string name="dialog_save_node">Save this place in cloud storage?</string>
+    <string name="title_nodes">Spots</string>
 </resources>

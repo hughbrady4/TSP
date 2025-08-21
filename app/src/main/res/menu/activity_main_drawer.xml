@@ -11,9 +11,9 @@
             android:title="@string/title_maps" />
 
         <item
-            android:id="@+id/navigation_routes"
+            android:id="@+id/navigation_nodes"
             android:icon="@drawable/ic_dashboard_black_24dp"
-            android:title="@string/title_routes" />
+            android:title="@string/title_nodes" />
 
 
     </group>

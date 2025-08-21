@@ -1,7 +1,5 @@
 package com.organicsystemsllc.travelingsalesman.ui.maps;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
@@ -15,6 +13,8 @@ public class MapNode {
     private boolean mVisited;
     private String mFormattedAddress;
     private AdvancedMarker mMarker;
+
+    public MapNode() {}
 
     public MapNode(LatLng position, String label, boolean visited, AdvancedMarker marker) {
         this.mPosition = position;

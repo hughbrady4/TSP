@@ -3,27 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:minHeight="?listPreferredItemHeight"
+    android:background="?attr/selectableItemBackground">
 
     <TextView
         android:id="@+id/tv_node_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        tools:text="A"
+
+        android:layout_margin="@dimen/text_margin"
+        android:textAppearance="?attr/textAppearanceListItem"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
+    <TextView
+        android:id="@+id/tv_node_pos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:layout_margin="@dimen/text_margin"
+
+        app:layout_constraintStart_toEndOf="@id/tv_node_label"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:id="@+id/tv_node_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        tools:text="Hello"
-        app:layout_constraintStart_toEndOf="@id/tv_node_label"
-        app:layout_constraintTop_toTopOf="parent"/>
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:layout_margin="@dimen/text_margin"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_node_label"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

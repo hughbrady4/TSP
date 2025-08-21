@@ -96,10 +96,9 @@ public class NodeFragment extends Fragment implements NodeRecyclerViewAdapter.On
                                     String nodeId = document.getId();
                                     MapNode node = new MapNode();
                                     String label = document.getString("label");
-                                    HashMap<String, Double> pos = (HashMap<String, Double>) document.get("position");
-                                    Log.d(MainActivity.TAG, pos.toString());
+                                    String address = document.getString("formattedAddress");
                                     node.setLabel(label);
-                                    node.setPosition(new LatLng(pos.get("latitude"), pos.get("longitude")));
+                                    node.setFormattedAddress(address);
                                     nodes.add(node);
 
 

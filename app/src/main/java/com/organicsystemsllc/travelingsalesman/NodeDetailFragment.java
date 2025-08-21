@@ -19,23 +19,32 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.type.Date;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeDetailDialogBinding;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsFragment;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 public class NodeDetailFragment extends BottomSheetDialogFragment {
 
@@ -132,16 +141,25 @@ public class NodeDetailFragment extends BottomSheetDialogFragment {
                         public void onClick(DialogInterface dialog, int id) {
                             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                             if (currentUser == null) {
-                                Toast.makeText(getContext(),"Please login to publish location.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(),"Please login to save location.", Toast.LENGTH_SHORT).show();
                                 return;
                             }
+                            Map<String, Object> docData = new HashMap<>();
+                            docData.put("label", mNode.getLabel());
+                            docData.put("lat", mNode.getPosition().latitude);
+                            docData.put("lng", mNode.getPosition().longitude);
+                            docData.put("formattedAddress", mNode.getFormattedAddress());
+
+                            docData.put("ts", FieldValue.serverTimestamp());
+
                             FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
                                     .collection("nodes")
-                                    .add(mNode)
+                                    .add(docData)
                                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                         @Override
                                         public void onSuccess(DocumentReference documentReference) {
                                             Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
@@ -150,8 +168,6 @@ public class NodeDetailFragment extends BottomSheetDialogFragment {
                                             Log.w(TAG, "Error adding document", e);
                                         }
                                     });
-
-
 
                         }
                     })

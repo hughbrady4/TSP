@@ -10,8 +10,6 @@ import android.widget.TextView;
 
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListItemBinding;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
-import com.organicsystemsllc.travelingsalesman.ui.placeholder.PlaceholderContent.PlaceholderItem;
-import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeBinding;
 
 import java.util.List;
 

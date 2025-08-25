@@ -4,8 +4,6 @@ import static com.organicsystemsllc.travelingsalesman.MainActivity.TAG;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -21,9 +19,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
@@ -66,17 +62,14 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.maps.android.PolyUtil;
 import com.organicsystemsllc.travelingsalesman.BuildConfig;
-import com.organicsystemsllc.travelingsalesman.NodeDetailFragment;
-import com.organicsystemsllc.travelingsalesman.NodeListFragment;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
+import com.organicsystemsllc.travelingsalesman.NodeListFragment;
 import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
-import com.organicsystemsllc.travelingsalesman.ui.route.RouteRequest;
 
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -93,7 +86,6 @@ public class MapsFragment extends Fragment implements
 
     private GoogleMap mMap;
     private static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-
     private Polyline mLine;
     private final OnMapReadyCallback mCallback = new OnMapReadyCallback() {
 
@@ -104,14 +96,10 @@ public class MapsFragment extends Fragment implements
             MapCapabilities capabilities = map.getMapCapabilities();
             Log.i(TAG, "Advanced marker enabled? " + capabilities.isAdvancedMarkersAvailable());
 
-            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                @SuppressLint("PotentialBehaviorOverride")
-                @Override
-                public boolean onMarkerClick(@NonNull Marker marker) {
-                    NodeDetailFragment.newInstance(marker.getTitle()).show(requireActivity()
-                            .getSupportFragmentManager(), "dialog");
-                    return false;
-                }
+            mMap.setOnMarkerClickListener(marker -> {
+                NodeListFragment.newInstance().show(requireActivity()
+                        .getSupportFragmentManager(), "dialog");
+                return false;
             });
 
 
@@ -123,35 +111,32 @@ public class MapsFragment extends Fragment implements
 
                 @Override
                 public void onMarkerDragEnd(@NonNull Marker marker) {
-//                    MapNode node = (MapNode) marker.getTag();
-                    String label = marker.getTitle();
-//                    if (node != null) {
+
+                    //get map node from the view model using marker title
                     final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
+                    String label = marker.getTitle();
                     HashMap<String, MapNode> newList;
                     if (nodes.getValue() != null) {
                         MapNode node = nodes.getValue().get(label);
                         if (node != null) {
+                            //update the node with new position and get address
                             node.setPosition(marker.getPosition());
                             reverseGeoCode(marker, node);
-
+                            //update the view model
                             newList = new HashMap<>(nodes.getValue());
                             nodes.setValue(newList);
-
-                            NodeDetailFragment.newInstance(label).show(requireActivity()
+                            //show the route dialog
+                            NodeListFragment.newInstance().show(requireActivity()
                                     .getSupportFragmentManager(), "dialog");
                         }
                     }
-
-
-//                    }
 
                 }
 
                 @Override
                 public void onMarkerDragStart(@NonNull Marker marker) {
+                    //clear any existing route information
                     mMapsViewModel.getRoute().setValue(null);
-
-
                 }
             });
 
@@ -163,22 +148,22 @@ public class MapsFragment extends Fragment implements
                 }
             });
 
+            //move camera to user position
             mMapsViewModel.getLatLng().observe(requireActivity(), latLng -> {
-                Log.i(TAG,"Position updated!");
-//                addMarkerToMap(latLng, map);
                 CameraUpdate update = CameraUpdateFactory.newLatLng(latLng);
                 map.moveCamera(update);
             });
 
-//            final LatLng value = mMapsViewModel.getLatLng().getValue();
-//            if (value != null) {
-//                CameraUpdate update = CameraUpdateFactory.newLatLng(value);
-//                map.moveCamera(update);
-//            }
 
             setLocationEnabled();
 
-            setListeners();
+            mMap.setOnCameraMoveListener(MapsFragment.this);
+            mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                @Override
+                public void onMapClick(@NonNull LatLng latLng) {
+                    addMarkerToMap(latLng);
+                }
+            });
 
             mMapsViewModel.getNodes().observeForever(new Observer<HashMap<String, MapNode>>() {
                 @Override
@@ -187,7 +172,6 @@ public class MapsFragment extends Fragment implements
                     if (mapNodes == null) {
                         map.clear();
                     }
-//                    callRouteApi(mapNodes);
                 }
             });
 
@@ -195,8 +179,8 @@ public class MapsFragment extends Fragment implements
                 route -> {
                     if (route != null && route.getPolyline() != null) {
                         mLine = addEdgeToMap(route.getPolyline(), map);
-                        NodeListFragment.newInstance().show(requireActivity()
-                                .getSupportFragmentManager(), "dialog");
+//                        NodeListFragment.newInstance().show(requireActivity()
+//                                .getSupportFragmentManager(), "dialog");
                     } else {
                         if (mLine != null) {
                             mLine.remove();
@@ -208,33 +192,9 @@ public class MapsFragment extends Fragment implements
         }
     };
 
-    private void setListeners() {
-
-        mMap.setOnCameraMoveListener(this);
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(@NonNull LatLng latLng) {
-                addMarkerToMap(latLng);
-            }
-        });
-    }
-
-
-    private void getNodes() {
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            Toast.makeText(getContext(),"Please login to get data.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-
-    }
-
     private MapsViewModel mMapsViewModel;
 
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
-    private FragmentMapsBinding mBinding;
 
 
     private void addMarkerToMap(LatLng position) {
@@ -280,7 +240,7 @@ public class MapsFragment extends Fragment implements
             newList.put(label, newNode);
 
             nodes.setValue(newList);
-            NodeDetailFragment.newInstance(label).show(requireActivity()
+            NodeListFragment.newInstance().show(requireActivity()
                     .getSupportFragmentManager(), "dialog");
         }
 
@@ -311,7 +271,7 @@ public class MapsFragment extends Fragment implements
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        mBinding = FragmentMapsBinding.inflate(inflater, container, false);
+        com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding mBinding = FragmentMapsBinding.inflate(inflater, container, false);
         return mBinding.getRoot();
     }
 
@@ -411,6 +371,8 @@ public class MapsFragment extends Fragment implements
                         .setAction("Action", null).show();
                 Log.w(MainActivity.TAG, "Error writing document", e);
             });
+
+        addMarkerToMap(new LatLng(location.getLatitude(), location.getLongitude()));
 
     }
 
@@ -590,37 +552,12 @@ public class MapsFragment extends Fragment implements
 
     }
 
-
-
-    public void callRouteApi(HashMap<String, MapNode> nodes) {
-
-        if (nodes == null || nodes.size() < 2) return;
-
-
-        String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
-            RouteRequest routeRequest = new
-                RouteRequest(url, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Route route = new Route(response);
-                        mMapsViewModel.getRoute().setValue(route);
-    //                                addRouteToFirestore(route);
-                    }
-                }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-
-                    Log.e(TAG, "Failed! " + error.getLocalizedMessage());
-                }
-            });
-
-        routeRequest.setNodes(new ArrayList<>(nodes.values()));
-        Log.i(TAG, String.valueOf(nodes));
-
-        // Add the request to the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(requireActivity());
-        queue.add(routeRequest);
-
+    private void getNodes() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(getContext(),"Please login to get data.", Toast.LENGTH_SHORT).show();
+        }
     }
+
 
 }

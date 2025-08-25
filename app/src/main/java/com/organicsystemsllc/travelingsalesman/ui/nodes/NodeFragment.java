@@ -6,7 +6,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,7 +28,6 @@ import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * A fragment representing a list of Items.
@@ -61,7 +58,7 @@ public class NodeFragment extends Fragment implements NodeRecyclerViewAdapter.On
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_node_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_node_list2, container, false);
         RecyclerView recyclerView = (RecyclerView) view;
 
         // Set the adapter

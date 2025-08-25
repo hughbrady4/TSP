@@ -24,7 +24,7 @@
         android:id="@+id/navigation_nodes"
         android:name="com.organicsystemsllc.travelingsalesman.ui.nodes.NodeFragment"
         android:label="Places"
-        tools:layout="@layout/fragment_node_list"/>
+        tools:layout="@layout/fragment_node_list2"/>
 
     <fragment
         android:id="@+id/navigation_routes"

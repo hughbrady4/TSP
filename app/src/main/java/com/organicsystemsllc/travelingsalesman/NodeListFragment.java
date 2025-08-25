@@ -1,10 +1,16 @@
 package com.organicsystemsllc.travelingsalesman;
 
+import static com.organicsystemsllc.travelingsalesman.MainActivity.TAG;
+
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import androidx.lifecycle.MutableLiveData;
@@ -12,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +30,9 @@ import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListItemB
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
+import com.organicsystemsllc.travelingsalesman.ui.route.RouteRequest;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +41,7 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
     private static final String ARG_NODES = "nodes";
     private FragmentNodeListBinding mBinding;
+    private MapsViewModel mMapsViewModel;
 
 
     public static NodeListFragment newInstance() {
@@ -54,28 +65,67 @@ public class NodeListFragment extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        MapsViewModel mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
+        mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
         final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
         if (nodes != null && nodes.getValue() != null) {
             ItemAdapter adapter = new ItemAdapter(new ArrayList<>(nodes.getValue().values()));
             recyclerView.setAdapter(adapter);
         }
-//        final MutableLiveData<Route> routeData = mMapsViewModel.getRoute();
-//        Route route = routeData.getValue();
-//        if (route != null) {
-//            mBinding.tvDistance.setText(route.getDistanceMeters().toString());
-//            mBinding.tvDuration.setText(route.getDuration());
-//        }
 
-//        Button clear = mBinding.clear;
-//        clear.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-////                map.clear();
-//                mMapsViewModel.getNodes().setValue(null);
-//                mMapsViewModel.getRoute().setValue(null);
-//            }
-//        });
+
+        Button route = mBinding.btnRoute;
+        route.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (nodes != null) {
+                    HashMap<String, MapNode> nodeList = nodes.getValue();
+                    callRouteApi(nodeList);
+                }
+                dismiss();
+            }
+        });
+
+        Button clear = mBinding.btnClear;
+        clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                map.clear();
+                mMapsViewModel.getNodes().setValue(null);
+                mMapsViewModel.getRoute().setValue(null);
+                dismiss();
+            }
+        });
+    }
+
+    public void callRouteApi(HashMap<String, MapNode> nodes) {
+
+        if (nodes == null || nodes.size() < 2) return;
+
+
+        String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
+        RouteRequest routeRequest = new
+                RouteRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Route route = new Route(response);
+                mMapsViewModel.getRoute().setValue(route);
+                //addRouteToFirestore(route);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.e(TAG, "Failed! " + error.getLocalizedMessage());
+            }
+        });
+
+        routeRequest.setNodes(new ArrayList<>(nodes.values()));
+        Log.i(TAG, String.valueOf(nodes));
+
+        // Add the request to the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(requireActivity());
+        queue.add(routeRequest);
+
     }
 
     @Override

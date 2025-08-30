@@ -154,13 +154,15 @@ public class MapsFragment extends Fragment implements
                 map.moveCamera(update);
             });
 
-
+            //set up location permissions
             setLocationEnabled();
 
             mMap.setOnCameraMoveListener(MapsFragment.this);
+
             mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                 @Override
                 public void onMapClick(@NonNull LatLng latLng) {
+                    //add marker to map on click
                     addMarkerToMap(latLng);
                 }
             });
@@ -175,20 +177,17 @@ public class MapsFragment extends Fragment implements
                 }
             });
 
+
             mMapsViewModel.getRoute().observe(getViewLifecycleOwner(),
                 route -> {
                     if (route != null && route.getPolyline() != null) {
                         mLine = addEdgeToMap(route.getPolyline(), map);
-//                        NodeListFragment.newInstance().show(requireActivity()
-//                                .getSupportFragmentManager(), "dialog");
                     } else {
                         if (mLine != null) {
                             mLine.remove();
                         }
                     }
             });
-
-
         }
     };
 
@@ -196,9 +195,7 @@ public class MapsFragment extends Fragment implements
 
     private ActivityResultLauncher<String[]> mLocationPermissionRequest;
 
-
     private void addMarkerToMap(LatLng position) {
-
 
         final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
         HashMap<String, MapNode> newList;
@@ -303,12 +300,13 @@ public class MapsFragment extends Fragment implements
             autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
                 @Override
                 public void onPlaceSelected(@NonNull Place place) {
-                    // TODO: Get info about the selected place.
                     Log.i(TAG, "Place: " + place.toString());
-                    addMarkerToMap(place.getLocation());
-                    CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
-                    mMap.moveCamera(update);
-                    autocompleteFragment.setText("");
+                    if (place.getLocation() != null) {
+                        addMarkerToMap(place.getLocation());
+                        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
+                        mMap.moveCamera(update);
+                        autocompleteFragment.setText("");
+                    }
 
                 }
 

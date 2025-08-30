@@ -13,12 +13,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -78,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
     private PendingIntent mPendingIntent;
     private MapsViewModel mMapsViewModel;
     private AppBarConfiguration mAppBarConfiguration;
-    private DrawerLayout mDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +87,16 @@ public class MainActivity extends AppCompatActivity {
         ActivityMainBinding mBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(mBinding.getRoot());
         setSupportActionBar(mBinding.appBarNavDrawer.toolbar);
-        mDrawer = mBinding.drawerLayout;
+        DrawerLayout mDrawer = mBinding.drawerLayout;
         NavigationView navigationView = mBinding.navView2;
 
         mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
+        Button signIn = navigationView.getHeaderView(0).findViewById(R.id.btn_signIn);
+//        Button signOut = navigationView.getHeaderView(0).findViewById(R.id.btn_signOut);
+        signIn.setOnClickListener(v -> signIn());
+
+//        signOut.setOnClickListener(v -> signOut());
 
         // Initialize Firebase Auth
         FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -104,7 +109,8 @@ public class MainActivity extends AppCompatActivity {
 //                ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageView);
 //                image.setImageURI(currentUser.getPhotoUrl());
                 getUserData(currentUser);
-
+                signIn.setVisibility(View.INVISIBLE);
+//                signOut.setVisibility(View.VISIBLE);
                 ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageViewNav);
                 TextView username = navigationView.getHeaderView(0).findViewById(R.id.username);
                 if (currentUser.getDisplayName() != null && !currentUser.getDisplayName().isEmpty()) {
@@ -112,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     username.setText(currentUser.getEmail());
                 }
+                username.setVisibility(View.VISIBLE);
 
                 Picasso.get()
                         .load(uri)
@@ -121,6 +128,12 @@ public class MainActivity extends AppCompatActivity {
 
 
             } else {
+                ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageViewNav);
+                image.setImageResource(R.mipmap.ic_launcher_round);
+                signIn.setVisibility(View.VISIBLE);
+//                signOut.setVisibility(View.INVISIBLE);
+                TextView username = navigationView.getHeaderView(0).findViewById(R.id.username);
+                username.setVisibility(View.INVISIBLE);
                 mUserViewModel.getUser().setValue(null);
                 mUserViewModel.getPhotoUri().setValue(null);
             }
@@ -413,12 +426,12 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
-        } else if (id == R.id.action_sign_in) {
-            signIn();
-            return true;
-        } else if (id == R.id.action_sign_out) {
-            signOut();
-            return true;
+//        } else if (id == R.id.action_sign_in) {
+//            signIn();
+//            return true;
+//        } else if (id == R.id.action_sign_out) {
+//            signOut();
+//            return true;
         }
         return super.onOptionsItemSelected(item);
     }

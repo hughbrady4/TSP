@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListBinding;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListItemBinding;
@@ -99,11 +100,28 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
     public void callRouteApi(HashMap<String, MapNode> nodes) {
 
-        if (nodes == null || nodes.size() < 2) return;
+        if (nodes == null || nodes.size() < 2) {
+            Toast.makeText(getContext(), "Please add at least two points to build route.", 
+                    Toast.LENGTH_SHORT).show();;
+            return;
+        }
 
 
+        final RouteRequest routeRequest = getRouteRequest();
+
+        routeRequest.setNodes(new ArrayList<>(nodes.values()));
+        Log.i(TAG, String.valueOf(nodes));
+
+        // Add the request to the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(requireActivity());
+        queue.add(routeRequest);
+
+    }
+
+    @NonNull
+    private RouteRequest getRouteRequest() {
         String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
-        RouteRequest routeRequest = new
+        return new
                 RouteRequest(url, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -118,14 +136,6 @@ public class NodeListFragment extends BottomSheetDialogFragment {
                 Log.e(TAG, "Failed! " + error.getLocalizedMessage());
             }
         });
-
-        routeRequest.setNodes(new ArrayList<>(nodes.values()));
-        Log.i(TAG, String.valueOf(nodes));
-
-        // Add the request to the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(requireActivity());
-        queue.add(routeRequest);
-
     }
 
     @Override

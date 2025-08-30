@@ -63,4 +63,5 @@
     <string name="delete">Delete</string>
     <string name="dialog_save_node">Save this place in cloud storage?</string>
     <string name="title_nodes">Spots</string>
+    <string name="sign_out_content_desc">Sign out of Firebase backend servers.</string>
 </resources>

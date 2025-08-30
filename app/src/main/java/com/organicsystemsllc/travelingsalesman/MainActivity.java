@@ -84,19 +84,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //set the layout
         ActivityMainBinding mBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(mBinding.getRoot());
         setSupportActionBar(mBinding.appBarNavDrawer.toolbar);
         DrawerLayout mDrawer = mBinding.drawerLayout;
         NavigationView navigationView = mBinding.navView2;
 
+
         mUserViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         Button signIn = navigationView.getHeaderView(0).findViewById(R.id.btn_signIn);
-//        Button signOut = navigationView.getHeaderView(0).findViewById(R.id.btn_signOut);
         signIn.setOnClickListener(v -> signIn());
-
-//        signOut.setOnClickListener(v -> signOut());
 
         // Initialize Firebase Auth
         FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -106,8 +105,6 @@ public class MainActivity extends AppCompatActivity {
                 mUserViewModel.getUser().setValue(currentUser);
                 Uri uri = currentUser.getPhotoUrl();
                 mUserViewModel.getPhotoUri().setValue(currentUser.getPhotoUrl());
-//                ImageView image = navigationView.getHeaderView(0).findViewById(R.id.imageView);
-//                image.setImageURI(currentUser.getPhotoUrl());
                 getUserData(currentUser);
                 signIn.setVisibility(View.INVISIBLE);
 //                signOut.setVisibility(View.VISIBLE);
@@ -426,12 +423,9 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
-//        } else if (id == R.id.action_sign_in) {
-//            signIn();
-//            return true;
-//        } else if (id == R.id.action_sign_out) {
-//            signOut();
-//            return true;
+        } else if (id == R.id.action_sign_out) {
+            signOut();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

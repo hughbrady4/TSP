@@ -57,7 +57,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.organicsystemsllc.travelingsalesman.databinding.ActivityMainBinding;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
-import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 import com.organicsystemsllc.travelingsalesman.ui.user.UserData;
 import com.organicsystemsllc.travelingsalesman.ui.user.UserViewModel;
 import com.squareup.picasso.Picasso;
@@ -152,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 //        });
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_maps, R.id.navigation_nodes)
+                R.id.navigation_maps, R.id.navigation_routes)
                 .setOpenableLayout(mDrawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);
@@ -290,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
                     switch (dc.getType()) {
                         case ADDED:
                             Log.d(TAG, "New route: " + dc.getDocument().getData());
-                            Route route = dc.getDocument().toObject(Route.class);
+//                            Route route = dc.getDocument().toObject(Route.class);
 //                            mMapsViewModel.getRoute().setValue(route);
                             break;
                         case MODIFIED:

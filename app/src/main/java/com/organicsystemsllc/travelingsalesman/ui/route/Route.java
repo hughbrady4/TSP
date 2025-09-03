@@ -2,10 +2,13 @@ package com.organicsystemsllc.travelingsalesman.ui.route;
 
 import android.util.JsonReader;
 
+import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
+
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashMap;
 
 public class Route {
 
@@ -13,6 +16,8 @@ public class Route {
     private Long mDistanceMeters;
     private String mDuration;
     private String mPolyline;
+    private HashMap<String, MapNode> mNodes;
+    private String mId;
 
     public Route() {
     }
@@ -91,4 +96,19 @@ public class Route {
         this.mLabel = label;
     }
 
+    public HashMap<String, MapNode> getNodes() {
+        return mNodes;
+    }
+
+    public void setNodes(HashMap<String, MapNode> nodes) {
+        this.mNodes = nodes;
+    }
+
+    public String getId() {
+        return mId;
+    }
+
+    public void setId(String id) {
+        this.mId = id;
+    }
 }

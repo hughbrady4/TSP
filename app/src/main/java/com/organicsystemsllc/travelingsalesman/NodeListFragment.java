@@ -3,21 +3,6 @@ package com.organicsystemsllc.travelingsalesman;
 import static com.organicsystemsllc.travelingsalesman.MainActivity.TAG;
 
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.NonNull;
-
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.Volley;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +11,20 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListBinding;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentNodeListItemBinding;
 import com.organicsystemsllc.travelingsalesman.ui.maps.MapNode;
@@ -33,14 +32,12 @@ import com.organicsystemsllc.travelingsalesman.ui.maps.MapsViewModel;
 import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 import com.organicsystemsllc.travelingsalesman.ui.route.RouteRequest;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class NodeListFragment extends BottomSheetDialogFragment {
 
-    private static final String ARG_NODES = "nodes";
     private FragmentNodeListBinding mBinding;
     private MapsViewModel mMapsViewModel;
 
@@ -73,28 +70,36 @@ public class NodeListFragment extends BottomSheetDialogFragment {
             recyclerView.setAdapter(adapter);
         }
 
+        Button btnDelete = mBinding.btnDelete;
+        Button btnRoute = mBinding.btnRoute;
 
-        Button route = mBinding.btnRoute;
-        route.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nodes != null) {
-                    HashMap<String, MapNode> nodeList = nodes.getValue();
-                    callRouteApi(nodeList);
-                }
-                dismiss();
+
+        mMapsViewModel.getRoute().observeForever(route -> {
+            if (route != null && route.getId() != null && !route.getId().isEmpty()) {
+                btnRoute.setVisibility(View.INVISIBLE);
+                btnDelete.setVisibility(View.VISIBLE);
+
+            } else {
+                btnRoute.setVisibility(View.VISIBLE);
+                btnDelete.setVisibility(View.INVISIBLE);
+
             }
         });
 
-        Button clear = mBinding.btnClear;
-        clear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                map.clear();
-                mMapsViewModel.getNodes().setValue(null);
-                mMapsViewModel.getRoute().setValue(null);
-                dismiss();
+        btnRoute.setOnClickListener(v -> {
+            if (nodes != null) {
+                HashMap<String, MapNode> nodeList = nodes.getValue();
+                callRouteApi(nodeList);
             }
+            dismiss();
+        });
+
+        Button clear = mBinding.btnClear;
+        clear.setOnClickListener(v -> {
+//                map.clear();
+            mMapsViewModel.getNodes().setValue(null);
+            mMapsViewModel.getRoute().setValue(null);
+            dismiss();
         });
     }
 
@@ -102,12 +107,12 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
         if (nodes == null || nodes.size() < 2) {
             Toast.makeText(getContext(), "Please add at least two points to build route.", 
-                    Toast.LENGTH_SHORT).show();;
+                    Toast.LENGTH_SHORT).show();
             return;
         }
 
 
-        final RouteRequest routeRequest = getRouteRequest();
+        final RouteRequest routeRequest = getRouteRequest(nodes);
 
         routeRequest.setNodes(new ArrayList<>(nodes.values()));
         Log.i(TAG, String.valueOf(nodes));
@@ -119,23 +124,41 @@ public class NodeListFragment extends BottomSheetDialogFragment {
     }
 
     @NonNull
-    private RouteRequest getRouteRequest() {
+    private RouteRequest getRouteRequest(HashMap<String, MapNode> nodes) {
         String url = "https://routes.googleapis.com/directions/v2:computeRoutes";
         return new
-                RouteRequest(url, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                Route route = new Route(response);
-                mMapsViewModel.getRoute().setValue(route);
-                //addRouteToFirestore(route);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
+                RouteRequest(url, response -> {
+                    Route route = new Route(response);
+                    route.setNodes(nodes);
+                    mMapsViewModel.getRoute().setValue(route);
+                    addRouteToFirestore(route);
+                }, error -> Log.e(TAG, "Failed! " + error.getLocalizedMessage()));
+    }
 
-                Log.e(TAG, "Failed! " + error.getLocalizedMessage());
-            }
-        });
+    public void addRouteToFirestore(Route route) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(requireContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> docData = new HashMap<>();
+        docData.put("label", route.getLabel());
+        docData.put("distanceMeters", route.getDistanceMeters());
+        docData.put("duration", route.getDuration());
+        docData.put("stops", route.getNodes().size());
+        docData.put("ts", FieldValue.serverTimestamp());
+
+        FirebaseFirestore.getInstance().collection("users")
+                .document(currentUser.getUid())
+                .collection("routes")
+                .add(docData)
+                .addOnSuccessListener(documentReference -> {
+                    route.setId(documentReference.getId());
+                    Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                })
+                .addOnFailureListener(e -> Log.w(TAG, "Error adding document", e));
+
     }
 
     @Override
@@ -162,7 +185,6 @@ public class NodeListFragment extends BottomSheetDialogFragment {
     private static class ItemAdapter extends RecyclerView.Adapter<ViewHolder> {
 
         private final ArrayList<MapNode> mNodes;
-        private Route mRoute;
 
         ItemAdapter(ArrayList<MapNode> nodes) {
             mNodes = nodes;
@@ -177,7 +199,7 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             String address = mNodes.get(position).getFormattedAddress();
             if (address != null && !address.isEmpty()) {
                 holder.tv_address.setText(address);

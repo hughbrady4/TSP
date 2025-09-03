@@ -427,31 +427,7 @@ public class MapsFragment extends Fragment implements
         }
     }
 
-    public void addRouteToFirestore(Route route) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        FirebaseFirestore.getInstance().collection("users")
-                .document(currentUser.getUid())
-                .collection("routes")
-                .add(route)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
 
-                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
-
-    }
 
     public void addNodeToFirestore() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();

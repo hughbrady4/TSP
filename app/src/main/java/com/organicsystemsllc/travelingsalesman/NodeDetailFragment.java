@@ -67,7 +67,6 @@ public class NodeDetailFragment extends BottomSheetDialogFragment {
                              @Nullable Bundle savedInstanceState) {
 
         mBinding = FragmentNodeDetailDialogBinding.inflate(inflater, container, false);
-
         return mBinding.getRoot();
 
     }
@@ -112,7 +111,6 @@ public class NodeDetailFragment extends BottomSheetDialogFragment {
             });
 
             Button clear = mBinding.btnClear;
-
             clear.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

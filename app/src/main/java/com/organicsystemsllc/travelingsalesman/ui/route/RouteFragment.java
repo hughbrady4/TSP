@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,17 +27,9 @@ import com.organicsystemsllc.travelingsalesman.R;
 
 import java.util.ArrayList;
 
-/**
- * A fragment representing a list of Items.
- */
-public class RouteFragment extends Fragment {
+public class RouteFragment extends Fragment implements RouteAdapter.OnItemClickListener {
 
 
-
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
     public RouteFragment() {
     }
 
@@ -50,8 +43,6 @@ public class RouteFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
 
 
     }
@@ -91,14 +82,14 @@ public class RouteFragment extends Fragment {
                                     Log.d(MainActivity.TAG, document.getId() + " => " + document.getData());
 
                                     String routeId = document.getId();
-                                    Route route = document.toObject(Route.class);
+                                    Route route = new Route();
                                     route.setLabel(routeId);
                                     routes.add(route);
 
 
                                 }
                                 RecyclerView listView = (RecyclerView) getView();
-                                recyclerView.setAdapter(new RouteAdapter(routes));
+                                recyclerView.setAdapter(new RouteAdapter(routes, RouteFragment.this));
                             } else {
                                 Log.d(MainActivity.TAG, "Error getting documents: ", task.getException());
                             }
@@ -116,15 +107,11 @@ public class RouteFragment extends Fragment {
         super.onDestroyView();
     }
 
-//    @Override
-//    public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-//        String routeId = snapshot.getKey();
-//        Route route = snapshot.getValue(Route.class);
-//        mRoutes.add(route);
-//        RecyclerView listView = (RecyclerView) getView();
-//        if (listView != null && listView.getAdapter() != null)
-//            listView.getAdapter().notifyItemChanged(mRoutes.size()-1);
-//
-//    }
+    @Override
+    public void onItemClick(int position) {
+        Toast.makeText(getContext(), Integer.toString(position), Toast.LENGTH_SHORT).show();
+
+    }
+
 
 }

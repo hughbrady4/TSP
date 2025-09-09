@@ -64,11 +64,8 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
-        final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
-        if (nodes != null && nodes.getValue() != null) {
-            ItemAdapter adapter = new ItemAdapter(new ArrayList<>(nodes.getValue().values()));
-            recyclerView.setAdapter(adapter);
-        }
+        final MutableLiveData<HashMap<String, MapNode>> nodes = getHashMapMutableLiveData(recyclerView);
+
 
         Button btnDelete = mBinding.btnDelete;
         Button btnRoute = mBinding.btnRoute;
@@ -87,10 +84,8 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         });
 
         btnRoute.setOnClickListener(v -> {
-            if (nodes != null) {
-                HashMap<String, MapNode> nodeList = nodes.getValue();
-                callRouteApi(nodeList);
-            }
+            HashMap<String, MapNode> nodeList = nodes.getValue();
+            callRouteApi(nodeList);
             dismiss();
         });
 
@@ -101,6 +96,20 @@ public class NodeListFragment extends BottomSheetDialogFragment {
             mMapsViewModel.getRoute().setValue(null);
             dismiss();
         });
+    }
+
+    @NonNull
+    private MutableLiveData<HashMap<String, MapNode>> getHashMapMutableLiveData(RecyclerView recyclerView) {
+        final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
+        nodes.observeForever(mapNodeHashMap -> {
+
+            if (mapNodeHashMap != null) {
+                NodeItemAdapter adapter = new NodeItemAdapter(new ArrayList<>(mapNodeHashMap.values()));
+                recyclerView.setAdapter(adapter);
+            }
+
+        });
+        return nodes;
     }
 
     public void callRouteApi(HashMap<String, MapNode> nodes) {
@@ -144,8 +153,11 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
         Map<String, Object> docData = new HashMap<>();
         docData.put("label", route.getLabel());
-        docData.put("distanceMeters", route.getDistanceMeters());
+        docData.put("distanceKilometers", route.getDistanceMeters() / 1000);
+        String duration = route.getDuration();
+        duration = duration.substring(0, duration.length() - 1 );
         docData.put("duration", route.getDuration());
+        docData.put("durationMinutes", Float.parseFloat(duration) / 60);
         docData.put("stops", route.getNodes().size());
         docData.put("ts", FieldValue.serverTimestamp());
 
@@ -182,11 +194,12 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
     }
 
-    private static class ItemAdapter extends RecyclerView.Adapter<ViewHolder> {
+
+    private static class NodeItemAdapter extends RecyclerView.Adapter<ViewHolder> {
 
         private final ArrayList<MapNode> mNodes;
 
-        ItemAdapter(ArrayList<MapNode> nodes) {
+        NodeItemAdapter(ArrayList<MapNode> nodes) {
             mNodes = nodes;
         }
 
@@ -208,6 +221,10 @@ public class NodeListFragment extends BottomSheetDialogFragment {
             }
             String label = mNodes.get(position).getLabel();
             holder.tv_label.setText(label);
+
+            holder.itemView.setOnClickListener(v -> {
+
+            });
         }
 
         @Override

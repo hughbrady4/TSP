@@ -159,14 +159,6 @@ public class MapsFragment extends Fragment implements
 
             mMap.setOnCameraMoveListener(MapsFragment.this);
 
-            mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-                @Override
-                public void onMapClick(@NonNull LatLng latLng) {
-                    //add marker to map on click
-                    addMarkerToMap(latLng);
-                }
-            });
-
             mMapsViewModel.getNodes().observeForever(new Observer<HashMap<String, MapNode>>() {
                 @Override
                 public void onChanged(HashMap<String, MapNode> mapNodes) {
@@ -343,6 +335,7 @@ public class MapsFragment extends Fragment implements
     }
 
     @Override
+    //write user location to cloud and add marker to map when current location is clicked
     public void onMyLocationClick(@NonNull Location location) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -362,12 +355,12 @@ public class MapsFragment extends Fragment implements
             .addOnSuccessListener(aVoid -> {
                 Snackbar.make(requireView(), "Location updated on server.", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                Log.d(MainActivity.TAG, "DocumentSnapshot successfully written!");
+                Log.i(MainActivity.TAG, "DocumentSnapshot successfully written!");
             })
             .addOnFailureListener(e -> {
                 Snackbar.make(requireView(), "Failed to update server.", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                Log.w(MainActivity.TAG, "Error writing document", e);
+                Log.e(MainActivity.TAG, "Error writing document", e);
             });
 
         addMarkerToMap(new LatLng(location.getLatitude(), location.getLongitude()));

@@ -1,6 +1,7 @@
 package com.organicsystemsllc.travelingsalesman;
 
 import static com.organicsystemsllc.travelingsalesman.MainActivity.TAG;
+import static com.organicsystemsllc.travelingsalesman.ui.maps.MapsFragment.LABELS;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,10 +35,13 @@ import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 import com.organicsystemsllc.travelingsalesman.ui.route.RouteRequest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class NodeListFragment extends BottomSheetDialogFragment {
+
+public class NodeListFragment extends BottomSheetDialogFragment implements ListOrderModifiedCallback{
 
     private FragmentNodeListBinding mBinding;
     private MapsViewModel mMapsViewModel;
@@ -61,11 +66,24 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+
         final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
-        final MutableLiveData<HashMap<String, MapNode>> nodes = getHashMapMutableLiveData(recyclerView);
 
+        mMapsViewModel = new ViewModelProvider(requireActivity()).get(MapsViewModel.class);
+
+        final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
+        nodes.observeForever(mapNodeHashMap -> {
+
+            if (mapNodeHashMap != null) {
+                NodeItemAdapter adapter = new NodeItemAdapter(this, new ArrayList<>(mapNodeHashMap.values()));
+                recyclerView.setAdapter(adapter);
+                ItemTouchHelper touchHelper = new ItemTouchHelper(new NodeTouchCallback(adapter));
+                touchHelper.attachToRecyclerView(recyclerView);
+
+            }
+
+        });
 
         Button btnDelete = mBinding.btnDelete;
         Button btnRoute = mBinding.btnRoute;
@@ -84,7 +102,7 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         });
 
         btnRoute.setOnClickListener(v -> {
-            HashMap<String, MapNode> nodeList = nodes.getValue();
+            HashMap<String, MapNode> nodeList = mMapsViewModel.getNodes().getValue();
             callRouteApi(nodeList);
             dismiss();
         });
@@ -96,20 +114,9 @@ public class NodeListFragment extends BottomSheetDialogFragment {
             mMapsViewModel.getRoute().setValue(null);
             dismiss();
         });
-    }
 
-    @NonNull
-    private MutableLiveData<HashMap<String, MapNode>> getHashMapMutableLiveData(RecyclerView recyclerView) {
-        final MutableLiveData<HashMap<String, MapNode>> nodes = mMapsViewModel.getNodes();
-        nodes.observeForever(mapNodeHashMap -> {
 
-            if (mapNodeHashMap != null) {
-                NodeItemAdapter adapter = new NodeItemAdapter(new ArrayList<>(mapNodeHashMap.values()));
-                recyclerView.setAdapter(adapter);
-            }
 
-        });
-        return nodes;
     }
 
     public void callRouteApi(HashMap<String, MapNode> nodes) {
@@ -179,11 +186,25 @@ public class NodeListFragment extends BottomSheetDialogFragment {
         mBinding = null;
     }
 
+    public void onListOrderModified(ArrayList<MapNode> newNodes) {
+
+        HashMap<String, MapNode> newList = new HashMap<>();
+        AtomicInteger index = new AtomicInteger();
+        newNodes.forEach(mapNode -> {
+            String label = String.valueOf(LABELS[index.get() % LABELS.length]);
+            mapNode.setLabel(label);
+            newList.put(label, mapNode);
+            index.addAndGet(1);
+
+        });
+
+        mMapsViewModel.getNodes().setValue(newList);
+    }
+
     private static class ViewHolder extends RecyclerView.ViewHolder {
 
         final TextView tv_label;
         final TextView tv_address;
-
 
         ViewHolder(FragmentNodeListItemBinding binding) {
             super(binding.getRoot());
@@ -194,13 +215,20 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
     }
 
+    public interface ItemTouchHelperAdapter {
+        void onItemMove(int fromPosition, int toPosition);
+    }
 
-    private static class NodeItemAdapter extends RecyclerView.Adapter<ViewHolder> {
 
+    private static class NodeItemAdapter extends RecyclerView.Adapter<ViewHolder> implements ItemTouchHelperAdapter{
+
+
+        private final ListOrderModifiedCallback mCallback;
         private final ArrayList<MapNode> mNodes;
 
-        NodeItemAdapter(ArrayList<MapNode> nodes) {
-            mNodes = nodes;
+        NodeItemAdapter(ListOrderModifiedCallback callback, ArrayList<MapNode> nodes) {
+            this.mCallback = callback;
+            this.mNodes = nodes;
         }
 
         @NonNull
@@ -224,6 +252,7 @@ public class NodeListFragment extends BottomSheetDialogFragment {
 
             holder.itemView.setOnClickListener(v -> {
 
+
             });
         }
 
@@ -232,5 +261,46 @@ public class NodeListFragment extends BottomSheetDialogFragment {
             return mNodes.size();
         }
 
+        @Override
+        public void onItemMove(int fromPosition, int toPosition) {
+            Collections.swap(mNodes, fromPosition, toPosition);
+            mCallback.onListOrderModified(mNodes);
+        }
+    }
+
+    private static class NodeTouchCallback extends ItemTouchHelper.Callback {
+
+        private final ItemTouchHelperAdapter mAdapter;
+
+        private NodeTouchCallback(ItemTouchHelperAdapter adapter) {
+            this.mAdapter = adapter;
+        }
+
+        @Override
+        public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
+            super.onSelectedChanged(viewHolder, actionState);
+            Log.i(TAG, "Item Selected!");
+        }
+
+        @Override
+        public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+            return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
+        }
+
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            mAdapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+            return true;
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+        }
+
+        @Override
+        public boolean isLongPressDragEnabled() {
+            return true;
+        }
     }
 }

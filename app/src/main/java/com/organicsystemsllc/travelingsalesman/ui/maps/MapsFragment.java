@@ -85,7 +85,7 @@ public class MapsFragment extends Fragment implements
         GoogleMap.OnMyLocationClickListener {
 
     private GoogleMap mMap;
-    private static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    public static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private Polyline mLine;
     private final OnMapReadyCallback mCallback = new OnMapReadyCallback() {
 
@@ -298,6 +298,7 @@ public class MapsFragment extends Fragment implements
                         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
                         mMap.moveCamera(update);
                         autocompleteFragment.setText("");
+                        addNodeToFirestore(place);
                     }
 
                 }
@@ -422,16 +423,16 @@ public class MapsFragment extends Fragment implements
 
 
 
-    public void addNodeToFirestore() {
+    public void addNodeToFirestore(Place place) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
-            Toast.makeText(getContext(),"Please login to add location.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),"User not logged in, failed to update cloud", Toast.LENGTH_SHORT).show();
             return;
         }
         LatLng latLng = mMap.getCameraPosition().target;
         FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
                 .collection("nodes")
-                .add(latLng)
+                .add(place)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {

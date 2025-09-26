@@ -32,6 +32,12 @@
         android:label="Routes"
         tools:layout="@layout/fragment_route_list"/>
 
+    <fragment
+        android:id="@+id/navigation_requests"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.requests.RequestFragment"
+        android:label="Requests"
+        tools:layout="@layout/request_item_list"/>
+
     <dialog
         android:id="@+id/navigation_node_detail"
         android:name="com.organicsystemsllc.travelingsalesman.NodeDetailFragment"
@@ -39,6 +45,14 @@
         tools:layout="@layout/fragment_node_detail_dialog">
 
     </dialog>
+
+    <fragment
+        android:id="@+id/navigation_request_detail"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.requests.RequestDetailFragment"
+        android:label="Request Detail"
+        tools:layout="@layout/fragment_node_detail_dialog">
+
+    </fragment>
 
 
 </navigation>

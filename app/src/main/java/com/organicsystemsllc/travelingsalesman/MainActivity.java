@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 //        });
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_maps, R.id.navigation_routes)
+                R.id.navigation_maps, R.id.navigation_routes, R.id.navigation_requests)
                 .setOpenableLayout(mDrawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_nav_drawer);

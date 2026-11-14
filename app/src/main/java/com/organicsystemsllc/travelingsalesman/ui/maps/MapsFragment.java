@@ -31,17 +31,15 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.AdvancedMarker;
 import com.google.android.gms.maps.model.AdvancedMarkerOptions;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapCapabilities;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PinConfig;
@@ -50,9 +48,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.RectangularBounds;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -70,11 +65,9 @@ import com.organicsystemsllc.travelingsalesman.ui.route.Route;
 
 import org.json.JSONObject;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MapsFragment extends Fragment implements
@@ -85,6 +78,7 @@ public class MapsFragment extends Fragment implements
         GoogleMap.OnMyLocationClickListener {
 
     private GoogleMap mMap;
+    private MapView mMapView;
     public static final char[] LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private Polyline mLine;
     private final OnMapReadyCallback mCallback = new OnMapReadyCallback() {
@@ -101,7 +95,6 @@ public class MapsFragment extends Fragment implements
                         .getSupportFragmentManager(), "dialog");
                 return false;
             });
-
 
             mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
                 @Override
@@ -168,7 +161,6 @@ public class MapsFragment extends Fragment implements
                     }
                 }
             });
-
 
             mMapsViewModel.getRoute().observe(getViewLifecycleOwner(),
                 route -> {
@@ -260,59 +252,18 @@ public class MapsFragment extends Fragment implements
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        com.organicsystemsllc.travelingsalesman.databinding.FragmentMapsBinding mBinding = FragmentMapsBinding.inflate(inflater, container, false);
+        FragmentMapsBinding mBinding = FragmentMapsBinding.inflate(inflater, container, false);
         return mBinding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        SupportMapFragment mapFragment =
-                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(mCallback);
+        mMapView = view.findViewById(R.id.map);
+        if (mMapView != null) {
+            mMapView.onCreate(savedInstanceState);
+            mMapView.getMapAsync(mCallback);
         }
-
-        // Initialize the AutocompleteSupportFragment.;
-
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getChildFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-//        final LatLngBounds latLngBounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-//
-//        autocompleteFragment.setLocationBias(RectangularBounds.newInstance(
-//                latLngBounds.southwest,
-//                latLngBounds.northeast));
-
-        // Specify the types of place data to return.
-        if (autocompleteFragment != null) {
-            autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LOCATION));
-
-        // Set up a PlaceSelectionListener to handle the response.
-            autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-                @Override
-                public void onPlaceSelected(@NonNull Place place) {
-                    Log.i(TAG, "Place: " + place.toString());
-                    if (place.getLocation() != null) {
-                        addMarkerToMap(place.getLocation());
-                        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLocation(), 10);
-                        mMap.moveCamera(update);
-                        autocompleteFragment.setText("");
-                        addNodeToFirestore(place);
-                    }
-
-                }
-
-
-                @Override
-                public void onError(@NonNull Status status) {
-                    // TODO: Handle the error.
-                    Log.i(TAG, "An error occurred: " + status);
-                }
-            });
-
-        }
-
 
         mMapsViewModel.getRoute().observeForever(new Observer<Route>() {
             @Override
@@ -351,7 +302,7 @@ public class MapsFragment extends Fragment implements
         userMap.put("bearing", location.getBearing());
         userMap.put("updated", FieldValue.serverTimestamp());
 
-        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+        FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
             .set(userMap, SetOptions.merge())
             .addOnSuccessListener(aVoid -> {
                 Snackbar.make(requireView(), "Location updated on server.", Snackbar.LENGTH_LONG)
@@ -421,8 +372,6 @@ public class MapsFragment extends Fragment implements
         }
     }
 
-
-
     public void addNodeToFirestore(Place place) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -482,7 +431,8 @@ public class MapsFragment extends Fragment implements
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, Objects.requireNonNull(error.getLocalizedMessage()));
+                Log.e(TAG, "Error: " + error.getMessage());
+//                Log.e(TAG, Objects.requireNonNull(error.getLocalizedMessage()));
             }
         });
 
@@ -504,14 +454,14 @@ public class MapsFragment extends Fragment implements
 
     @Override
     public void onCameraMove() {
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getChildFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-        final LatLngBounds latLngBounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-
-        autocompleteFragment.setLocationBias(RectangularBounds.newInstance(
-                latLngBounds.southwest,
-                latLngBounds.northeast));
+//        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+//                getChildFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+//
+//        final LatLngBounds latLngBounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+//
+//        autocompleteFragment.setLocationBias(RectangularBounds.newInstance(
+//                latLngBounds.southwest,
+//                latLngBounds.northeast));
 
     }
 
@@ -527,5 +477,60 @@ public class MapsFragment extends Fragment implements
         }
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (mMapView != null) {
+            mMapView.onStart();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mMapView != null) {
+            mMapView.onResume();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        if (mMapView != null) {
+            mMapView.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (mMapView != null) {
+            mMapView.onStop();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (mMapView != null) {
+            mMapView.onDestroy();
+        }
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mMapView != null) {
+            mMapView.onSaveInstanceState(outState);
+        }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mMapView != null) {
+            mMapView.onLowMemory();
+        }
+    }
 
 }

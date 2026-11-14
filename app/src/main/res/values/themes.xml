@@ -1,22 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.TravelingSalesman" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Primary brand color. -->
-        <!--        <item name="colorPrimary">@color/purple_500</item>-->
-        <!--        <item name="colorPrimaryVariant">@color/purple_700</item>-->
-        <!--        <item name="colorOnPrimary">@color/white</item>-->
-        <!-- Secondary brand color. -->
-        <!--        <item name="colorSecondary">@color/teal_200</item>-->
-        <!--        <item name="colorSecondaryVariant">@color/teal_700</item>-->
-        <!--        <item name="colorOnSecondary">@color/black</item>-->
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+    <style name="Theme.TravelingSalesman" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/cool_primary</item>
+        <item name="colorPrimaryVariant">@color/cool_primary_dark</item>
+        <item name="colorSecondary">@color/cool_accent</item>
     </style>
+
     <!-- Base application theme. -->
-    <style name="Base.Theme.TravelingSalesman" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.TravelingSalesman" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/cool_primary</item>
+        <item name="colorPrimaryVariant">@color/cool_primary_dark</item>
+        <item name="colorSecondary">@color/cool_accent</item>
     </style>
 
     <style name="NoActionBar">
@@ -24,7 +18,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

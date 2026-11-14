@@ -64,6 +64,9 @@ public class Route {
     }
 
     public Long getDistanceMeters() {
+        if (mDistanceMeters == null) {
+            return 0L;
+        }
         return mDistanceMeters;
     }
 

@@ -158,6 +158,7 @@ public class NodeListFragment extends BottomSheetDialogFragment implements ListO
             return;
         }
 
+        Log.i(TAG, route.toString());
         Map<String, Object> docData = new HashMap<>();
         docData.put("label", route.getLabel());
         docData.put("distanceKilometers", route.getDistanceMeters() / 1000);

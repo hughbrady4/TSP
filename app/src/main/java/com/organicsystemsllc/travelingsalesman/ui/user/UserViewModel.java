@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 import android.net.Uri;
 import android.util.Patterns;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -24,9 +25,12 @@ public class UserViewModel extends ViewModel {
     private final MutableLiveData<Timestamp> mTS;
     private final MutableLiveData<UserData>  mUserData;
 
+    private final MutableLiveData<LatLng> mLatLng;
 
 
-    UserViewModel() {
+
+
+    public UserViewModel() {
         mValidState = new MutableLiveData<>();
         mValidUserName = new MutableLiveData<>();
         mValidPW = new MutableLiveData<>();
@@ -37,6 +41,7 @@ public class UserViewModel extends ViewModel {
         mOnlineToggle = new MutableLiveData<>();
         mTS = new MutableLiveData<>();
         mUserData = new MutableLiveData<>();
+        mLatLng = new MutableLiveData<>();
     }
 
     public void loginDataChanged(String username, String password) {
@@ -110,5 +115,9 @@ public class UserViewModel extends ViewModel {
 
     public MutableLiveData<UserData> getUserData() {
         return mUserData;
+    }
+
+    public MutableLiveData<LatLng> getLatLng() {
+        return mLatLng;
     }
 }

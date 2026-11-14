@@ -27,13 +27,17 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.organicsystemsllc.travelingsalesman.MainActivity;
+import com.organicsystemsllc.travelingsalesman.R;
 import com.organicsystemsllc.travelingsalesman.databinding.FragmentUserBinding;
 
 import java.io.InputStream;
@@ -86,7 +90,6 @@ public class UserFragment extends Fragment {
 
         final ImageView imageView = mUserBinding.imageView;
         mUserViewModel.getPhotoUri().observe(getViewLifecycleOwner(), uri -> {
-
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream((InputStream)new URL(uri.toString()).getContent());
                 imageView.setImageBitmap(bitmap);
@@ -203,9 +206,6 @@ public class UserFragment extends Fragment {
 
         trackToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
-
-            mUserViewModel.getTrackToggle().setValue(isChecked);
-
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
             if (currentUser == null) {
                 Toast.makeText(getContext(),"Please login to enable switch.", Toast.LENGTH_SHORT).show();
@@ -215,7 +215,7 @@ public class UserFragment extends Fragment {
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("trackLocation", isChecked);
             userMap.put("updated", FieldValue.serverTimestamp());
-            FirebaseFirestore.getInstance().collection("users")
+            FirebaseFirestore.getInstance().collection("drivers")
                     .document(currentUser.getUid())
                     .set(userMap, SetOptions.merge())
                     .addOnSuccessListener(aVoid -> {
@@ -232,11 +232,7 @@ public class UserFragment extends Fragment {
         });
 
         mUserViewModel.getTrackToggle().observe(getViewLifecycleOwner(), checked -> {
-            if (checked != null) {
-                trackToggle.setChecked(checked);
-            } else {
-                trackToggle.setChecked(false);
-            }
+            trackToggle.setChecked(checked != null && checked);
         });
 
         SwitchCompat onlineToggle = mUserBinding.switchOnline;
@@ -252,9 +248,9 @@ public class UserFragment extends Fragment {
             userMap.put("isOnline", isChecked);
             userMap.put("updated", FieldValue.serverTimestamp());
 
-            mUserViewModel.getOnlineToggle().setValue(isChecked);
+//            mUserViewModel.getOnlineToggle().setValue(isChecked);
 
-            FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+            FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
                     .set(userMap, SetOptions.merge())
                     .addOnSuccessListener(aVoid -> {
                         Snackbar.make(view, "Online visibility updated.", Snackbar.LENGTH_LONG)
@@ -267,14 +263,14 @@ public class UserFragment extends Fragment {
                         Log.w(MainActivity.TAG, "Error writing document", e);
                     });
 
+            if (isChecked) {
+                getFCMToken(currentUser);
+            }
+
         });
 
         mUserViewModel.getOnlineToggle().observe(getViewLifecycleOwner(), checked -> {
-            if (checked != null) {
-                onlineToggle.setChecked(checked);
-            } else {
-                onlineToggle.setChecked(false);
-            }
+            onlineToggle.setChecked(checked != null && checked);
         });
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> {
@@ -321,5 +317,36 @@ public class UserFragment extends Fragment {
 
         // Start the share activity
         startActivity(Intent.createChooser(shareIntent, "Open with"));
+    }
+
+    private void getFCMToken(FirebaseUser currentUser) {
+
+        FirebaseMessaging.getInstance().getToken()
+            .addOnCompleteListener(new OnCompleteListener<String>() {
+                @Override
+                public void onComplete(@NonNull Task<String> task) {
+                    if (!task.isSuccessful()) {
+                        Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+
+                    String token = task.getResult();
+
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("fcmToken", token);
+                    userMap.put("updated", FieldValue.serverTimestamp());
+
+                    FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
+                            .set(userMap, SetOptions.merge())
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d(MainActivity.TAG, "DocumentSnapshot successfully written!");
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.w(MainActivity.TAG, "Error writing document", e);
+                            });
+
+                }
+            });
+
     }
 }

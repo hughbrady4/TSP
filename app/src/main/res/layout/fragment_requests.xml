@@ -7,24 +7,88 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/tv_Phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/phone_number"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toTopOf="@id/container" />
 
+    <TextView
+        android:id="@+id/tv_pickup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/pickup_address"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/tv_Phone" />
+
+    <TextView
+        android:id="@+id/tv_destination"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/destination_address"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/tv_pickup" />
+
+    <TextView
+        android:id="@+id/tv_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/request_timestamp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/tv_destination" />
+
+    <TextView
+        android:id="@+id/tv_distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/tv_distance"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_timestamp" />
+
+    <TextView
+        android:id="@+id/tv_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/tv_duration"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toEndOf="@id/tv_distance"
+        app:layout_constraintTop_toBottomOf="@id/tv_timestamp" />
 
     <androidx.fragment.app.FragmentContainerView
 
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="@id/container"
+        android:layout_height="wrap_content"
+
         app:layout_constraintLeft_toLeftOf="@id/container"
         app:layout_constraintRight_toRightOf="@id/container"
+        app:layout_constraintTop_toTopOf="@id/container"
         app:uiRotateGestures="true"
         app:uiZoomControls="true"
-        tools:context=".ui.requests.RequestFragment">
+        tools:context=".ui.requests.RequestListFragment">
 
 
     </androidx.fragment.app.FragmentContainerView>
-
 
 
 

@@ -34,9 +34,13 @@
 
     <fragment
         android:id="@+id/navigation_requests"
-        android:name="com.organicsystemsllc.travelingsalesman.ui.requests.RequestFragment"
+        android:name="com.organicsystemsllc.travelingsalesman.ui.requests.RequestListFragment"
         android:label="Requests"
-        tools:layout="@layout/request_item_list"/>
+        tools:layout="@layout/request_item_list">
+        <action
+            android:id="@+id/action_navigation_requests_to_navigation_request_detail"
+            app:destination="@id/navigation_request_detail" />
+    </fragment>
 
     <dialog
         android:id="@+id/navigation_node_detail"
@@ -53,6 +57,12 @@
         tools:layout="@layout/fragment_node_detail_dialog">
 
     </fragment>
+
+    <activity
+        android:id="@+id/navigation_checkout"
+        android:name="com.organicsystemsllc.travelingsalesman.CheckoutActivity"
+        android:label="@string/title_activity_checkout"
+        tools:layout="@layout/activity_checkout" />
 
 
 </navigation>

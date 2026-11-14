@@ -65,4 +65,20 @@
     <string name="title_nodes">Spots</string>
     <string name="sign_out_content_desc">Sign out of Firebase backend servers.</string>
     <string name="requests">Requests</string>
+    <string name="channel_name">TSP Notifications</string>
+    <string name="channel_description">Notification Channel for TSP App.</string>
+    <string name="phone_number">+11234567890</string>
+    <string name="pickup_address">Pickup street address</string>
+    <string name="destination_address">Destination street address</string>
+    <string name="tv_distance">5.1 miles</string>
+    <string name="tv_duration">20 minutes</string>
+    <string name="minutes">%.1f minutes</string>
+    <string name="meters">%.1f miles</string>
+    <string name="request_timestamp">Request timestamp</string>
+    <string name="request_status">Request Status</string>
+    <string name="title_requests">Request Detail</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
+    <string name="title_activity_checkout">CheckoutActivity</string>
+    <string name="action_checkout">Checkout</string>
 </resources>

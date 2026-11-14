@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/button_accept"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/accept"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toTopOf="@id/container"/>
+
+
+    <Button
+        android:id="@+id/button_decline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/decline"
+        app:layout_constraintStart_toEndOf="@id/button_accept"
+        app:layout_constraintTop_toTopOf="@id/container"/>
+
+    <TextView
+        android:id="@+id/tv_Phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/phone_number"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/button_accept" />
+
+    <TextView
+        android:id="@+id/tv_pickup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/pickup_address"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/tv_Phone" />
+
+    <TextView
+        android:id="@+id/tv_destination"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/destination_address"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/tv_pickup" />
+
+    <TextView
+        android:id="@+id/tv_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/request_timestamp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="@id/container"
+        app:layout_constraintTop_toBottomOf="@id/tv_destination" />
+
+    <TextView
+        android:id="@+id/tv_distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/tv_distance"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_timestamp" />
+
+    <TextView
+        android:id="@+id/tv_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="16dp"
+        android:padding="5dp"
+        android:text="@string/tv_duration"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toEndOf="@id/tv_distance"
+        app:layout_constraintTop_toBottomOf="@id/tv_timestamp" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

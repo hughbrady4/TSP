@@ -47,7 +47,7 @@ public class LocationReceiver extends BroadcastReceiver {
                     userMap.put("altitude", location.getAltitude());
                     userMap.put("bearing", location.getBearing());
                     userMap.put("updated", FieldValue.serverTimestamp());
-                    mFirestore.collection("users").document(data)
+                    mFirestore.collection("drivers").document(data)
                             .set(userMap, SetOptions.merge())
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override

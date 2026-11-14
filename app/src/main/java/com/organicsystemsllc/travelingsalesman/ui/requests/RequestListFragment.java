@@ -17,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentChange;
@@ -35,25 +34,17 @@ import java.util.List;
 /**
  * A fragment representing a list of Items.
  */
-public class RequestFragment extends Fragment implements RequestAdapter.RequestListSelectionListener {
+public class RequestListFragment extends Fragment implements RequestAdapter.RequestListSelectionListener {
 
-    public RequestFragment() {
+    public RequestListFragment() {
     }
 
     @SuppressWarnings("unused")
-    public static RequestFragment newInstance(int columnCount) {
-        RequestFragment fragment = new RequestFragment();
+    public static RequestListFragment newInstance(int columnCount) {
+        RequestListFragment fragment = new RequestListFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-        }
     }
 
     @Override
@@ -80,41 +71,41 @@ public class RequestFragment extends Fragment implements RequestAdapter.RequestL
         if (user != null) {
             mFireStore.collection("requests")
 //                    .whereEqualTo("state", "CA")
-                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable QuerySnapshot snapshots,
-                                            @Nullable FirebaseFirestoreException e) {
-                            if (e != null || snapshots == null) {
-                                Log.w(MainActivity.TAG, "listen:error", e);
-                                return;
-                            }
-
-                            List<Request> requests = new ArrayList<>();
-                            for (QueryDocumentSnapshot request : snapshots) {
-                                Request request1 = request.toObject(Request.class);
-                                request1.setId(request.getId());
-                                requests.add(request1);
-                            }
-                            RecyclerView recyclerView = (RecyclerView) view;
-
-                            recyclerView.setAdapter(new RequestAdapter(requests, RequestFragment.this));
-
-                            for (DocumentChange dc : snapshots.getDocumentChanges()) {
-                                switch (dc.getType()) {
-                                    case ADDED:
-                                        Log.d(MainActivity.TAG, "New city: " + dc.getDocument().getData());
-                                        break;
-                                    case MODIFIED:
-                                        Log.d(MainActivity.TAG, "Modified city: " + dc.getDocument().getData());
-                                        break;
-                                    case REMOVED:
-                                        Log.d(MainActivity.TAG, "Removed city: " + dc.getDocument().getData());
-                                        break;
-                                }
-                            }
-
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot snapshots,
+                                        @Nullable FirebaseFirestoreException e) {
+                        if (e != null || snapshots == null) {
+                            Log.w(MainActivity.TAG, "listen:error", e);
+                            return;
                         }
-                    });
+
+                        List<Request> requests = new ArrayList<>();
+                        for (QueryDocumentSnapshot request : snapshots) {
+                            Request request1 = request.toObject(Request.class);
+                            request1.setId(request.getId());
+                            requests.add(request1);
+                        }
+                        RecyclerView recyclerView = (RecyclerView) view;
+
+                        recyclerView.setAdapter(new RequestAdapter(requests, RequestListFragment.this));
+
+                        for (DocumentChange dc : snapshots.getDocumentChanges()) {
+                            switch (dc.getType()) {
+                                case ADDED:
+                                    Log.d(MainActivity.TAG, "New request: " + dc.getDocument().getData());
+                                    break;
+                                case MODIFIED:
+                                    Log.d(MainActivity.TAG, "Modified request: " + dc.getDocument().getData());
+                                    break;
+                                case REMOVED:
+                                    Log.d(MainActivity.TAG, "Removed request: " + dc.getDocument().getData());
+                                    break;
+                            }
+                        }
+
+                    }
+                });
 
         }
 
@@ -130,7 +121,7 @@ public class RequestFragment extends Fragment implements RequestAdapter.RequestL
     public void onRequestSelected(String requestId) {
         RequestViewModel viewModel = new ViewModelProvider(requireActivity()).get(RequestViewModel.class);
         viewModel.setRequestId(requestId);
-        Navigation.findNavController(getView()).navigate(R.id.navigation_request_detail);
+        Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_nav_drawer) .navigate(R.id.action_navigation_requests_to_navigation_request_detail);
 
     }
 
@@ -157,10 +148,6 @@ public class RequestFragment extends Fragment implements RequestAdapter.RequestL
 
         }
 
-        @Override
-        public boolean isLongPressDragEnabled() {
-            return true;
-        }
     }
 
 

@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void getUserData(FirebaseUser currentUser) {
-        DocumentReference driverRef = FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid());
+        DocumentReference driverRef = FirebaseFirestore.getInstance("travelingsalesman").collection("drivers").document(currentUser.getUid());
 
         driverRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         });
 
-        DocumentReference userRef = FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid());
+        DocumentReference userRef = FirebaseFirestore.getInstance("travelingsalesman").collection("users").document(currentUser.getUid());
 
         userRef.addSnapshotListener((snapshot, e) -> {
             if (e != null) {
@@ -318,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         });
 
 
-        CollectionReference routeRef = FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+        CollectionReference routeRef = FirebaseFirestore.getInstance("travelingsalesman").collection("users").document(currentUser.getUid())
                 .collection("routes");
 
         routeRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -584,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         userMap.put("altitude", location.getAltitude());
         userMap.put("bearing", location.getBearing());
         userMap.put("updated", FieldValue.serverTimestamp());
-        FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
+        FirebaseFirestore.getInstance("travelingsalesman").collection("drivers").document(currentUser.getUid())
                 .set(userMap, SetOptions.merge())
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override

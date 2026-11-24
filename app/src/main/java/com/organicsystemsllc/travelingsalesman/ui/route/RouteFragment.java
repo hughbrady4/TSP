@@ -68,7 +68,7 @@ public class RouteFragment extends Fragment implements RouteAdapter.OnItemClickL
         final RecyclerView recyclerView = (RecyclerView) view;
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
-        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
+        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance("travelingsalesman");
 
         if (user != null) {
             DocumentReference docRef = mFireStore.collection("users").document(user.getUid());

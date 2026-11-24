@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class LocationReceiver extends BroadcastReceiver {
-    private final FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
+    private final FirebaseFirestore mFirestore = FirebaseFirestore.getInstance("travelingsalesman");
 
     @Override
     public void onReceive(Context context, Intent intent) {

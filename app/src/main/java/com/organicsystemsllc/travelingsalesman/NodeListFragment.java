@@ -169,7 +169,7 @@ public class NodeListFragment extends BottomSheetDialogFragment implements ListO
         docData.put("stops", route.getNodes().size());
         docData.put("ts", FieldValue.serverTimestamp());
 
-        FirebaseFirestore.getInstance().collection("users")
+        FirebaseFirestore.getInstance("travelingsalesman").collection("users")
                 .document(currentUser.getUid())
                 .collection("routes")
                 .add(docData)

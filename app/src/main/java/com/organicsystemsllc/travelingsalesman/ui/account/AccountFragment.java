@@ -1,16 +1,17 @@
 package com.organicsystemsllc.travelingsalesman.ui.account;
 
-import androidx.lifecycle.ViewModelProvider;
-
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.Task;
@@ -22,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AccountFragment extends Fragment {
+
+    private static final String TAG = "AccountFragment";
 
     private AccountViewModel mViewModel;
     private FirebaseFunctions mFunctions;
@@ -37,10 +40,30 @@ public class AccountFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         mViewModel = new ViewModelProvider(this).get(AccountViewModel.class);
-        // TODO: Use the ViewModel
+        mFunctions = FirebaseFunctions.getInstance();
+
+        Button btnCreateAccount = view.findViewById(R.id.btn_create_account);
+        if (btnCreateAccount != null) {
+            btnCreateAccount.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Creating account...", Toast.LENGTH_SHORT).show();
+                createAccount("create account")
+                        .addOnSuccessListener(result -> {
+                            Log.d(TAG, "Account created successfully: " + result);
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Account created: " + result, Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error creating account", e);
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Failed to create account: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            });
+        }
     }
 
     private Task<String> createAccount(String text) {
@@ -50,17 +73,17 @@ public class AccountFragment extends Fragment {
         data.put("push", true);
 
         return mFunctions
-                .getHttpsCallable("createConnectedAccount")
-                .call(data)
-                .continueWith(new Continuation<HttpsCallableResult, String>() {
-                    @Override
-                    public String then(@NonNull Task<HttpsCallableResult> task) throws Exception {
-                        // This continuation runs on either success or failure, but if the task
-                        // has failed then getResult() will throw an Exception which will be
-                        // propagated down.
-                        return (String) task.getResult().getData();
-                    }
-                });
+            .getHttpsCallable("createConnectedAccount")
+            .call(data)
+            .continueWith(new Continuation<HttpsCallableResult, String>() {
+                @Override
+                public String then(@NonNull Task<HttpsCallableResult> task) throws Exception {
+                    // This continuation runs on either success or failure, but if the task
+                    // has failed then getResult() will throw an Exception which will be
+                    // propagated down.
+                    return (String) task.getResult().getData();
+                }
+            });
     }
 
 }

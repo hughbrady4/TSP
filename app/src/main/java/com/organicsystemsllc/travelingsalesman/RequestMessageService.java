@@ -28,7 +28,7 @@ public class RequestMessageService extends FirebaseMessagingService{
     private final FirebaseAuth mAuth;
 
     public RequestMessageService() {
-        this.mFirestore = FirebaseFirestore.getInstance();
+        this.mFirestore = FirebaseFirestore.getInstance("travelingsalesman");
         this.mAuth = FirebaseAuth.getInstance();
 
     }

@@ -81,4 +81,6 @@
     <string name="decline">Decline</string>
     <string name="title_activity_checkout">CheckoutActivity</string>
     <string name="action_checkout">Checkout</string>
+    <string name="create_connected_account">Create Connected Account</string>
+    <string name="pay_now">Pay Now</string>
 </resources>

@@ -176,7 +176,7 @@ public class RequestDetailFragment extends Fragment implements
         String requestId = mRequestViewModel.getRequestId().getValue();
         if (requestId == null) { return; }
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance("travelingsalesman");
 
 
         final DocumentReference docRef = db.collection("requests").document(requestId);
@@ -314,7 +314,7 @@ public class RequestDetailFragment extends Fragment implements
         posMap.put("bearing", location.getBearing());
         posMap.put("updated", FieldValue.serverTimestamp());
 
-        DocumentReference driverRef = FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid());
+        DocumentReference driverRef = FirebaseFirestore.getInstance("travelingsalesman").collection("drivers").document(currentUser.getUid());
 
 
         String requestId = mRequestViewModel.getRequestId().getValue();
@@ -336,11 +336,11 @@ public class RequestDetailFragment extends Fragment implements
             return;
         }
 
-        WriteBatch batch = FirebaseFirestore.getInstance().batch();
+        WriteBatch batch = FirebaseFirestore.getInstance("travelingsalesman").batch();
         Map<String, Object> driverMap = new HashMap<>();
         driverMap.put("driverPos", posMap);
 
-        DocumentReference requestRef = FirebaseFirestore.getInstance().collection("requests").document(requestId);
+        DocumentReference requestRef = FirebaseFirestore.getInstance("travelingsalesman").collection("requests").document(requestId);
         batch.set(requestRef, driverMap, SetOptions.merge());
         batch.set(driverRef, posMap, SetOptions.merge());
 
@@ -488,7 +488,7 @@ public class RequestDetailFragment extends Fragment implements
     private void loadRequests() {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
-        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
+        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance("travelingsalesman");
 
         if (user != null) {
             mFireStore.collection("requests")

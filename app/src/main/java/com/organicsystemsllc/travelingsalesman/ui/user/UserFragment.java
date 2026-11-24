@@ -215,7 +215,7 @@ public class UserFragment extends Fragment {
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("trackLocation", isChecked);
             userMap.put("updated", FieldValue.serverTimestamp());
-            FirebaseFirestore.getInstance().collection("drivers")
+            FirebaseFirestore.getInstance("travelingsalesman").collection("drivers")
                     .document(currentUser.getUid())
                     .set(userMap, SetOptions.merge())
                     .addOnSuccessListener(aVoid -> {
@@ -250,7 +250,7 @@ public class UserFragment extends Fragment {
 
 //            mUserViewModel.getOnlineToggle().setValue(isChecked);
 
-            FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
+            FirebaseFirestore.getInstance("travelingsalesman").collection("drivers").document(currentUser.getUid())
                     .set(userMap, SetOptions.merge())
                     .addOnSuccessListener(aVoid -> {
                         Snackbar.make(view, "Online visibility updated.", Snackbar.LENGTH_LONG)
@@ -336,7 +336,7 @@ public class UserFragment extends Fragment {
                     userMap.put("fcmToken", token);
                     userMap.put("updated", FieldValue.serverTimestamp());
 
-                    FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
+                    FirebaseFirestore.getInstance("travelingsalesman").collection("drivers").document(currentUser.getUid())
                             .set(userMap, SetOptions.merge())
                             .addOnSuccessListener(aVoid -> {
                                 Log.d(MainActivity.TAG, "DocumentSnapshot successfully written!");

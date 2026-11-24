@@ -302,7 +302,7 @@ public class MapsFragment extends Fragment implements
         userMap.put("bearing", location.getBearing());
         userMap.put("updated", FieldValue.serverTimestamp());
 
-        FirebaseFirestore.getInstance().collection("drivers").document(currentUser.getUid())
+        FirebaseFirestore.getInstance("travelingsalesman").collection("drivers").document(currentUser.getUid())
             .set(userMap, SetOptions.merge())
             .addOnSuccessListener(aVoid -> {
                 Snackbar.make(requireView(), "Location updated on server.", Snackbar.LENGTH_LONG)
@@ -379,7 +379,7 @@ public class MapsFragment extends Fragment implements
             return;
         }
         LatLng latLng = mMap.getCameraPosition().target;
-        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid())
+        FirebaseFirestore.getInstance("travelingsalesman").collection("users").document(currentUser.getUid())
                 .collection("nodes")
                 .add(place)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {

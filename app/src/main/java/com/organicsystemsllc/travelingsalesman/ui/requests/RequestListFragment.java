@@ -66,7 +66,7 @@ public class RequestListFragment extends Fragment implements RequestAdapter.Requ
         super.onViewCreated(view, savedInstanceState);
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
-        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
+        FirebaseFirestore mFireStore = FirebaseFirestore.getInstance("travelingsalesman");
 
         if (user != null) {
             mFireStore.collection("requests")

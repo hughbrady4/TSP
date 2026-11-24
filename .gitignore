@@ -32,3 +32,13 @@ google-services.json
 
 # Android Profiling
 *.hprof
+/app/src/main/java/com/organicsystemsllc/travelingsalesman/CartAdapter.java
+/app/src/main/java/com/organicsystemsllc/travelingsalesman/CartItem.java
+/app/src/main/java/com/organicsystemsllc/travelingsalesman/ui/theme/Color.kt
+/firestore.rules
+/gradle/gradle-daemon-jvm.properties
+/app/src/main/res/drawable/ic_payment.xml
+/app/src/main/res/layout/item_cart.xml
+/app/src/main/java/com/organicsystemsllc/travelingsalesman/ui/theme/Theme.kt
+/app/src/main/java/com/organicsystemsllc/travelingsalesman/ui/theme/Type.kt
+/UserFragment.pdf

@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.1"
+agp = "9.5.2"
 androidMapsUtils = "3.8.0"
 design = "27.1.1"
 junit = "4.13.2"
